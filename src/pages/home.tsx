@@ -9,7 +9,7 @@ import { CodeBlock } from 'react-code-block';
 
 
 export default function Home() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [messages, setMessages] = useState<any>([]);
   const [chats, setChats] = useState<any>([]);
   const [selectedChat, setSelectedChat] = useState<number | undefined>(undefined);
@@ -123,7 +123,7 @@ export default function Home() {
           {/* sidebar and main content */}
           <div className={`transition-all duration-300 ${sidebarOpen ? 'sm:w-64 w-full' : 'w-0 overflow-hidden opacity-0'} h-full`}>
             {/* sidebar */}
-            <button className="button w-full text-default" >+ New Chat</button>
+            <button className="button w-full text-default" onClick={handleNewChat}>+ New Chat</button>
             <hr className="border-accent my-default" />
             <div className="overflow-y-auto h-full">
               {/* Chat history would go here */}
@@ -132,7 +132,7 @@ export default function Home() {
                   <div key={index} className="p-small hover:bg-accent rounded-md cursor-pointer">
                     <button
                     onClick={()=> handleChatClick(chat)}
-                    className="button !bg-secondary/20 w-full">{chat?.messages[0]?.content}...</button>
+                    className="button bg-secondary/20! w-full">{chat?.messages[0]?.content}...</button>
                   </div>
                 )) :
                   <p className="text-default text-body p-default text-center">No previous chats.</p>
