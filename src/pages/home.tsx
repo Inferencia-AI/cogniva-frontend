@@ -6,6 +6,11 @@ import { FileTextIcon, Globe2Icon, MessageCircleCodeIcon, Mic2Icon, SendIcon, Si
 import { getIdToken, signOut } from "firebase/auth";
 import { auth } from "../utils/firebaseClient";
 import { CodeBlock } from 'react-code-block';
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 
 function TypingIndicator() {
@@ -148,7 +153,8 @@ export default function Home() {
               title: data?.title || link,
               description: data?.description || "",
               snippet,
-              content: condensedHtml
+              content: condensedHtml,
+              images: Array.isArray(data?.images) ? data.images : []
             };
           } catch (error) {
             console.error("Error scraping link:", link, error);
@@ -163,6 +169,7 @@ export default function Home() {
         description: string;
         snippet: string;
         content: string;
+        images: string[];
       }[];
 
       if (!validSources.length) {
@@ -172,6 +179,12 @@ export default function Home() {
         ]);
         return;
       }
+
+      const imageGallery = Array.from(
+        new Set(
+          validSources.flatMap((source) => source.images || [])
+        )
+      ).filter(Boolean);
 
       const contextPrompt = `You searched for "${trimmedQuery}". You crawled several sources and extracted condensed HTML/text. Create a concise, human-readable synthesis that answers the query, highlights key points, and keeps wording natural. Respond as JSON array of sections where each section has: topic (string), response (string or array of code snippets as in prior schema), and sources (array of {title, url, snippet}). Use the provided sources and do not fabricate URLs. Sources: ${JSON.stringify(
         validSources.map(({ url, title, description, snippet, content }) => ({
@@ -191,7 +204,8 @@ export default function Home() {
       const aiPayloadRaw = Array.isArray(response.data) ? response.data.flat() : [response.data];
       const enrichedPayload = aiPayloadRaw.map((section: any) => ({
         ...section,
-        sources: validSources.map(({ title, url, snippet }) => ({ title, url, snippet }))
+        sources: validSources.map(({ title, url, snippet }) => ({ title, url, snippet })),
+        images: Array.isArray(section?.images) ? section.images : imageGallery
       }));
 
       const updatedMessages = [...pendingMessages, { role: "ai", content: enrichedPayload }];
@@ -303,6 +317,7 @@ export default function Home() {
                     {aiSections?.filter(Boolean)?.map((section: any, sectionIndex: number) => {
                       const isStructuredResponse = Array.isArray(section?.response);
                       const hasCodeFence = typeof section?.response === "string" && section?.response.includes("```");
+                      const imageGallery = Array.isArray(section?.images) ? section.images.filter(Boolean) : [];
 
                       return (
                         <div key={`section-${sectionIndex}`} className="mt-auto p-default flex flex-col gap-small">
@@ -374,6 +389,36 @@ export default function Home() {
                           ) : null}
 
                           {section?.date ? <p className="text-caption"> {section?.date} </p> : null}
+
+                          {imageGallery.length ? (
+                            <div className="pt-small">
+                              <Swiper
+                                modules={[Navigation, Pagination]}
+                                slidesPerView={1}
+                                spaceBetween={12}
+                                navigation
+                                pagination={{ clickable: true }}
+                                breakpoints={{
+                                  640: { slidesPerView: 2 },
+                                  1024: { slidesPerView: 3 }
+                                }}
+                                className="w-full rounded-lg overflow-hidden bg-secondary/10 border border-accent/20 h-48"
+                              >
+                                {imageGallery.map((imgSrc: string, imgIndex: number) => (
+                                  <SwiperSlide key={`img-${imgIndex}`} className="w-full h-full">
+                                    <div className="w-full h-full flex items-center justify-center bg-primary">
+                                      <img
+                                        src={imgSrc}
+                                        alt={`Source ${imgIndex + 1}`}
+                                        className="w-full h-full object-contain"
+                                        loading="lazy"
+                                      />
+                                    </div>
+                                  </SwiperSlide>
+                                ))}
+                              </Swiper>
+                            </div>
+                          ) : null}
                         </div>
                       );
                     })}
