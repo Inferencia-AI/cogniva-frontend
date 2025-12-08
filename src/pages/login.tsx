@@ -172,6 +172,15 @@ export default function Login() {
 
             <button
               type="button"
+              onClick={() => navigate("/register")}
+              disabled={isSubmitting}
+              className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Create an account
+            </button>
+
+            <button
+              type="button"
               onClick={handleGoogleSubmit}
               disabled={isSubmitting}
               className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"

@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@plugin 'tailwind-scrollbar';
 @theme {
   --color-primary: #282C34;
   --color-accent: #1e1e2e;
@@ -19,7 +20,6 @@ html, body, #root {
   background-color: var(--color-primary);
   color: var(--text-color-default);
 }
-
 
 
 .button {

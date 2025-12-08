@@ -49,6 +49,7 @@ export default function Home() {
   }
 
   const handleChatClick = (chat: any) => {
+    setSidebarOpen(false);
     setMessages(chat.messages);
     setSelectedChat(chat.id);
   };
@@ -88,7 +89,7 @@ export default function Home() {
   
 
   return (
-    <div className="flex flex-col bg-primary h-full overflow-hidden">
+    <div className="flex flex-col bg-primary h-full">
       <div className="flex p-default items-center justify-between border-b border-accent shadow-md">
         {/* header */}
         <div className="flex items-center gap-default">
@@ -112,20 +113,20 @@ export default function Home() {
         <img src="/cogniva-landscape-logo.svg" className="h-20" alt="Cogniva Logo" />
       </div>
 
-      <div className="flex flex-col gap-default p-default h-full">
+      <div className="flex flex-col gap-default p-default h-full overflow-auto">
         <div onClick={toggleSidebar}>
           {
             sidebarOpen ? <SidebarClose className="text-accent bg-secondary size-8 rounded-md" /> :
               <SidebarOpenIcon className="text-accent bg-secondary size-8 rounded-md" />
           }
         </div>
-        <div className="flex gap-default h-full">
+        <div className="flex gap-default h-full overflow-hidden">
           {/* sidebar and main content */}
-          <div className={`transition-all duration-300 ${sidebarOpen ? 'sm:w-64 w-full' : 'w-0 overflow-hidden opacity-0'} h-full`}>
+          <div className={`transition-all duration-300 ${sidebarOpen ? 'sm:w-64 w-full' : 'w-0 overflow-hidden opacity-0'} h-full overflow-hidden`}>
             {/* sidebar */}
             <button className="button w-full text-default" onClick={handleNewChat}>+ New Chat</button>
             <hr className="border-accent my-default" />
-            <div className="overflow-y-auto h-full">
+            <div className="overflow-y-auto h-[80%] p-default flex flex-col gap-default bg-secondary/10 rounded-md scrollbar-thin  " dir="rtl"> 
               {/* Chat history would go here */}
               {
                 chats.length > 0 ? chats.map((chat: any, index: number) => (
@@ -137,6 +138,13 @@ export default function Home() {
                 )) :
                   <p className="text-default text-body p-default text-center">No previous chats.</p>
               }
+            </div>
+            <hr className="border-accent my-default" />
+            <div className="text-default text-caption text-center">
+              <img src="/cogniva-landscape-logo.svg" className="h-14 mx-auto mb-small rounded-md" alt="Cogniva Logo" />
+              &copy; 
+              {new Date().getFullYear() + " "}
+               Cogniva. All rights reserved.
             </div>
           </div>
           <div className={`transition-all duration-300 ${sidebarOpen ? 'sm:w-[calc(100%-16rem)] w-0' : 'w-full'} relative`}>
@@ -220,7 +228,7 @@ export default function Home() {
               )  
             }
             </div>
-            <div className={`h-[8%] shadow-md border-accent rounded-md border absolute ${sidebarOpen ? "bottom-0" : "bottom-8"} left-0 right-0`}>
+            <div className={`h-[8%] shadow-md border-accent rounded-md border absolute ${sidebarOpen ? "bottom-0" : "sm:bottom-0 bottom-4"} left-0 right-0`}>
               <div className="p-default gap-default bg-secondary/50 rounded-md flex gap-small items-center h-full justify-between">
                 <MessageCircleCodeIcon className="text-accent" />
                 <input
