@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import api from "../utils/api";
 import simpleChat from "../schemas/simpleChat.json" with { type: "json" };
 import codeChat from "../schemas/codeChatSchema.json" with { type: "json" };
-import { FileTextIcon, Globe2Icon, MessageCircleCodeIcon, 
+import { ArrowUpRight, FileTextIcon, Globe2Icon, MessageCircleCodeIcon, 
   // Mic2Icon,
-   SendIcon, SidebarClose, SidebarOpenIcon } from 'lucide-react'
+   SendIcon, SidebarClose, SidebarOpenIcon, X } from 'lucide-react'
 import { getIdToken, signOut } from "firebase/auth";
 import { auth } from "../utils/firebaseClient";
 import { CodeBlock } from 'react-code-block';
@@ -13,6 +13,7 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import Markdown from "react-markdown";
 
 
 function TypingIndicator() {
@@ -41,6 +42,11 @@ export default function Home() {
   const [isProcessingUrl, setIsProcessingUrl] = useState(false);
   const [isWebSearchMode, setIsWebSearchMode] = useState(false);
   const [isReplying, setIsReplying] = useState<boolean>(false);
+  const [previewSource, setPreviewSource] = useState<any>(null);
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [previewBlocks, setPreviewBlocks] = useState<any[]>([]);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   const toggleSidebar = () => {
@@ -243,6 +249,58 @@ export default function Home() {
       setIsReplying(false);
     }
   };
+
+  const handleOpenSource = async (source: any) => {
+    if (!source?.url) return;
+
+    setPreviewSource(source);
+    setPreviewHtml("");
+    setPreviewBlocks([]);
+    setPreviewError(null);
+    setIsPreviewLoading(true);
+
+    try {
+      const { data } = await api.get("/scrap-url", { params: { url: source.url } });
+      const rawHtml = typeof data?.html === "string" ? data.html : "";
+      const fallback = typeof data?.description === "string" ? `<p class=\"p-4 text-body\">${data.description}</p>` : "";
+
+      if (rawHtml) {
+        try {
+          const { data: summary } = await api.post("/summarize-html", { htmlContent: rawHtml });
+          const blocks = Array.isArray(summary) ? summary.filter(Boolean) : [];
+          if (blocks.length) {
+            setPreviewBlocks(blocks);
+            setPreviewHtml("");
+          } else {
+            setPreviewHtml(rawHtml);
+          }
+        } catch (summaryError) {
+          console.error("Error summarizing source preview:", summaryError);
+          setPreviewHtml(rawHtml);
+          setPreviewError("Unable to summarize. Showing raw preview.");
+        }
+      } else {
+        setPreviewHtml(fallback || "<p class=\"p-4 text-body\">No preview content available.</p>");
+      }
+    } catch (error) {
+      console.error("Error fetching source preview:", error);
+      setPreviewError("Unable to load preview. Use the Open page link.");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setPreviewSource(null);
+    setPreviewHtml("");
+    setPreviewBlocks([]);
+    setPreviewError(null);
+  };
+
+  const handleOpenNewTab = (url?: string) => {
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
   
   useEffect(() => {
     fetchUserData();
@@ -419,12 +477,12 @@ export default function Home() {
                                   : source?.url;
 
                                 return (
-                                  <a
+                                  <button
+                                    type="button"
                                     key={`source-${sourceIndex}`}
-                                    href={source?.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-start gap-small p-small rounded-md bg-secondary/20 border border-accent/40 hover:border-accent transition"
+                                    onClick={() => handleOpenSource(source)}
+                                    className="flex items-start gap-small p-small rounded-md bg-secondary/20 border border-accent/40 hover:border-accent transition text-left w-full"
+                                    disabled={!source?.url}
                                   >
                                     <FileTextIcon className="text-accent shrink-0" />
                                     <div className="flex flex-col overflow-hidden">
@@ -433,7 +491,7 @@ export default function Home() {
                                         {source?.snippet || source?.url}
                                       </p>
                                     </div>
-                                  </a>
+                                  </button>
                                 );
                               })}
                             </div>
@@ -522,6 +580,106 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {previewSource ? (
+          <div className="fixed inset-0 z-50 flex flex-col bg-black/80 backdrop-blur-sm">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 bg-secondary/90 border-b border-accent/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  type="button"
+                  onClick={handleClosePreview}
+                  className="p-2 rounded-md bg-secondary/60 hover:bg-secondary/80 border border-accent/30 text-default"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="sr-only">Close preview</span>
+                </button>
+                <div className="flex flex-col min-w-0">
+                  <p className="text-body font-semibold truncate">{previewSource?.title || previewSource?.url}</p>
+                  <p className="text-caption text-default/70 truncate">{previewSource?.url}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleOpenNewTab(previewSource?.url)}
+                className="flex items-center gap-1 text-accent hover:underline"
+              >
+                <ArrowUpRight className="w-4 h-4" />
+                <span className="text-body">Open page</span>
+              </button>
+            </div>
+
+            <div className="flex-1 m-4 bg-primary border border-accent/20 rounded-lg overflow-hidden min-h-0">
+              {isPreviewLoading ? (
+                <div className="h-full w-full flex items-center justify-center text-default">Loading preview…</div>
+              ) : previewBlocks.length ? (
+                <div className="h-full w-full overflow-y-auto p-4 flex flex-col gap-4">
+                  {previewBlocks.map((block: any, idx: number) => {
+                    const kind = (block.blockType || "text").toLowerCase();
+
+                    if (kind === "code") {
+                      return (
+                        <div key={idx} className="flex flex-col gap-2 bg-secondary/10 border border-accent/20 rounded-md p-3">
+                          {block.description ? <p className="text-caption text-default/70">{block.description}</p> : null}
+                          <CodeBlock code={block.content || ""} language="javascript">
+                            <CodeBlock.Code className="overflow-auto">
+                              <CodeBlock.LineContent>
+                                <CodeBlock.Token />
+                              </CodeBlock.LineContent>
+                            </CodeBlock.Code>
+                          </CodeBlock>
+                        </div>
+                      );
+                    }
+
+                    if (kind === "image") {
+                      return (
+                        <div key={idx} className="flex flex-col gap-2 bg-secondary/10 border border-accent/20 rounded-md p-3">
+                          {block.description ? <p className="text-caption text-default/70">{block.description}</p> : null}
+                          <img src={
+                            previewSource?.url +
+                            block.content} 
+                            alt={block.description || "Preview image"} className="max-h-96 object-contain rounded" />
+                        </div>
+                      );
+                    }
+
+                    if (kind === "link") {
+                      return (
+                        <div key={idx} className="flex items-center justify-between bg-secondary/10 border border-accent/20 rounded-md p-3">
+                          <div className="flex flex-col min-w-0">
+                            {block.description ? <p className="text-caption text-default/70 truncate">{block.description}</p> : null}
+                            <a href={block.content} target="_blank" rel="noreferrer" className="text-secondary underline truncate">
+                              {block.content}
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={idx} className="flex flex-col gap-1 bg-secondary/10 border border-accent/20 rounded-md p-3">
+                         {block.description ? <p className="text-caption text-default/70">{block.description}</p> : null}
+                        {/* <p className="text-body whitespace-pre-line">{block.content}</p>  */}
+                        <Markdown>
+                          {block.content || ""}
+                        </Markdown>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : previewError ? (
+                <div className="h-full w-full flex items-center justify-center px-6 text-default text-center">{previewError}</div>
+              ) : (
+                <iframe
+                  title={previewSource?.title || previewSource?.url || "Source preview"}
+                  srcDoc={previewHtml}
+                  sandbox="allow-same-origin"
+                  className="w-full h-full bg-white"
+                />
+              )}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
