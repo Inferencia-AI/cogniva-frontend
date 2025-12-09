@@ -133,6 +133,26 @@ export default function Home() {
       const searchResponse = await api.get("/search", { params: { q: trimmedQuery } });
       const links: string[] = searchResponse.data?.links || [];
 
+      const captchaLink = links.length === 1 && links[0]?.includes("duckduckgo.com/html/?");
+      if (captchaLink) {
+        const captchaMessage = {
+          role: "ai",
+          content: [
+            {
+              topic: "Captcha required",
+              response: "DuckDuckGo is asking for a captcha. Solve it below, then retry your search.",
+              sources: [],
+              captchaUrl: links[0]
+            }
+          ]
+        };
+
+        setMessages([...pendingMessages, captchaMessage]);
+        setIsProcessingUrl(false);
+        setIsReplying(false);
+        return;
+      }
+
       if (!links.length) {
         setMessages([
           ...pendingMessages,
@@ -365,6 +385,26 @@ export default function Home() {
                           ) : (
                             <p className="text-body whitespace-pre-line"> {section?.response} </p>
                           )}
+
+                          {section?.captchaUrl ? (
+                            <div className="flex flex-col gap-small">
+                              <iframe
+                                src={section.captchaUrl}
+                                title="DuckDuckGo Captcha"
+                                className="w-full h-96 rounded-md border border-accent"
+                                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                                loading="lazy"
+                              />
+                              <a
+                                href={section.captchaUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-accent underline text-caption"
+                              >
+                                Open in new tab if the frame does not load
+                              </a>
+                            </div>
+                          ) : null}
 
                           {Array.isArray(section?.sources) && section.sources.length > 0 ? (
                             <div className="grid sm:grid-cols-2 grid-cols-1 gap-small">
