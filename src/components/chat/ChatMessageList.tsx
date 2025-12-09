@@ -7,7 +7,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { TypingIndicator } from "./TypingIndicator";
-import type { ChatMessage, AiSection, AiSource } from "../../types/chat";
+import type { ChatMessage, AiSection, AiSource, AiSnippet } from "../../types/chat";
 import api from "../../utils/api";
 
 type SummaryBlock = {
@@ -98,7 +98,7 @@ export const ChatMessageList: FC<ChatMessageListProps> = ({ messages, isReplying
           return (
             <div key={`msg-${index}`} className="flex flex-col gap-default mb-default">
               {aiSections?.filter(Boolean)?.map((section, sectionIndex) => {
-                const isStructuredResponse = Array.isArray(section?.response);
+                const structuredResponse = Array.isArray(section?.response) ? section.response : null;
                 const hasCodeFence = typeof section?.response === "string" && (section.response as string).includes("```");
                 const imageGallery = Array.isArray(section?.images) ? section.images.filter(Boolean) : [];
 
@@ -106,9 +106,9 @@ export const ChatMessageList: FC<ChatMessageListProps> = ({ messages, isReplying
                   <div key={`section-${sectionIndex}`} className="mt-auto p-default flex flex-col gap-small">
                     <p className="text-heading">{section?.topic}</p>
 
-                    {isStructuredResponse ? (
+                    {structuredResponse ? (
                       <div className="flex flex-col gap-small">
-                        {section?.response?.map((snippet, snippetIndex) => {
+                        {structuredResponse?.map((snippet: AiSnippet, snippetIndex: number) => {
                           const snippetLanguage = typeof snippet?.language === "string" ? snippet.language.toLowerCase() : "text";
 
                           return (

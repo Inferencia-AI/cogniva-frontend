@@ -4,7 +4,7 @@ import api from "../utils/api";
 import simpleChat from "../schemas/simpleChat.json" with { type: "json" };
 import codeChat from "../schemas/codeChatSchema.json" with { type: "json" };
 import { auth } from "../utils/firebaseClient";
-import type { ChatMessage, ChatSummary, AiSource } from "../types/chat";
+import type { ChatMessage, ChatSummary, AiSource, AiSection } from "../types/chat";
 
 const sanitizeImages = (images: string[]) =>
   (images || [])
@@ -87,13 +87,13 @@ export function useChatSession() {
 
   const handleSendMessage = useCallback(
     async (prompt: string) => {
-      const newMessages = [...messages, { role: "human", content: prompt }];
+      const newMessages: ChatMessage[] = [...messages, { role: "human", content: prompt }];
       setMessages(newMessages);
       setIsReplying(true);
 
       try {
         const response = await api.post("/chat", { messages: newMessages, schema: [simpleChat, codeChat] });
-        const aiPayload = Array.isArray(response.data) ? response.data.flat() : [response.data];
+        const aiPayload = (Array.isArray(response.data) ? response.data.flat() : [response.data]) as AiSection[];
         const updatedMessages: ChatMessage[] = [...newMessages, { role: "ai", content: aiPayload }];
         setMessages(updatedMessages);
         await saveChat(updatedMessages, selectedChatId);
