@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../utils/api";
 import simpleChat from "../schemas/simpleChat.json" with { type: "json" };
 import codeChat from "../schemas/codeChatSchema.json" with { type: "json" };
-import { FileTextIcon, Globe2Icon, MessageCircleCodeIcon, Mic2Icon, SendIcon, SidebarClose, SidebarOpenIcon } from 'lucide-react'
+import { FileTextIcon, Globe2Icon, MessageCircleCodeIcon, 
+  // Mic2Icon,
+   SendIcon, SidebarClose, SidebarOpenIcon } from 'lucide-react'
 import { getIdToken, signOut } from "firebase/auth";
 import { auth } from "../utils/firebaseClient";
 import { CodeBlock } from 'react-code-block';
@@ -22,7 +24,7 @@ function TypingIndicator() {
         <span className="typing-dot" />
         <span className="typing-dot" />
       </div>
-      <span className="text-caption text-default">Assistant is typing</span>
+      <span className="text-caption text-default">Cogniva Responding</span>
     </div>
   );
 }
@@ -39,6 +41,7 @@ export default function Home() {
   const [isProcessingUrl, setIsProcessingUrl] = useState(false);
   const [isWebSearchMode, setIsWebSearchMode] = useState(false);
   const [isReplying, setIsReplying] = useState<boolean>(false);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -207,8 +210,8 @@ export default function Home() {
             role: "ai",
             content: [
               {
-                topic: "Source fetch failed",
-                response: `Unable to fetch ${link}. Skipping this source.`,
+                topic: "",
+                response: `${link}`,
                 sources: [{ title: link, url: link, snippet: "" }],
               },
             ],
@@ -250,6 +253,12 @@ export default function Home() {
       fetchChats();
     }
   }, [user]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [messages, isReplying]);
   
 
   return (
@@ -313,7 +322,10 @@ export default function Home() {
           </div>
           <div className={`transition-all duration-300 ${sidebarOpen ? 'sm:w-[calc(100%-16rem)] w-0' : 'w-full'} relative`}>
             {/* main content */}
-            <div className="flex flex-col h-[90%] overflow-y-auto absolute top-0 left-0 right-0">
+            <div
+              ref={messagesContainerRef}
+              className="flex flex-col h-[90%] overflow-y-auto absolute top-0 left-0 right-0"
+            >
               {messages.length > 0 ? messages.map((msg: any, index: number) => {
                 if (msg?.role === "human") {
                   return (
@@ -502,9 +514,9 @@ export default function Home() {
                 >
                   <Globe2Icon className={`text-accent ${isProcessingUrl ? "opacity-50" : ""}`} />
                 </button>
-                <button className="button" onClick={()=>{}}>
+                {/* <button className="button" onClick={()=>{}}>
                   <Mic2Icon className="text-accent" />
-                </button>
+                </button> */}
                 </div>
                 </div>
             </div>
