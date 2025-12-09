@@ -123,6 +123,16 @@ export default function Home() {
 
     if (!trimmedQuery) return;
 
+    const safeTitle = (title: string | undefined, fallback: string) => {
+      if (!title) return fallback;
+      const cleaned = title.trim();
+      if (!cleaned || cleaned.toLowerCase() === "no title found") return fallback;
+      return cleaned;
+    };
+
+    const sanitizeImages = (images: string[]) =>
+      (images || []).filter((src) => typeof src === "string" && /^https?:\/\//i.test(src)).filter(Boolean);
+
     const humanMessage = `${trimmedQuery}`;
     const pendingMessages = [...messages, { role: "human", content: humanMessage }];
     setMessages(pendingMessages);
@@ -131,107 +141,90 @@ export default function Home() {
 
     try {
       const searchResponse = await api.get("/search", { params: { q: trimmedQuery } });
-      const links: string[] = searchResponse.data?.links || [];
+      const links: string[] = Array.isArray(searchResponse.data?.links)
+        ? searchResponse.data.links.filter(Boolean)
+        : [];
+      const initialImages: string[] = Array.isArray(searchResponse.data?.images)
+        ? sanitizeImages(searchResponse.data.images)
+        : [];
+      const initialAnswer = searchResponse.data?.answer || "Here is what I found.";
 
-      const captchaLink = links.length === 1 && links[0]?.includes("duckduckgo.com/html/?");
-      if (captchaLink) {
-        const captchaMessage = {
-          role: "ai",
-          content: [
-            {
-              topic: "Captcha required",
-              response: "DuckDuckGo is asking for a captcha. Solve it below, then retry your search.",
-              sources: [],
-              captchaUrl: links[0]
-            }
-          ]
-        };
+      const initialAiMessage = {
+        role: "ai",
+        content: [
+          {
+            topic: `"${trimmedQuery}"`,
+            response: initialAnswer,
+            sources: links.map((link) => ({ title: safeTitle(undefined, link), url: link, snippet: "" })),
+            images: initialImages,
+          },
+        ],
+      };
 
-        setMessages([...pendingMessages, captchaMessage]);
-        setIsProcessingUrl(false);
-        setIsReplying(false);
-        return;
-      }
-
-      if (!links.length) {
-        setMessages([
-          ...pendingMessages,
-          { role: "ai", content: [{ topic: "Web search", response: "No sources found for that query." }] }
-        ]);
-        return;
-      }
-
-      const scrapedSources = await Promise.all(
-        links.map(async (link) => {
-          try {
-            const { data } = await api.get("/scrap-url", { params: { url: link } });
-            const condensedHtml = typeof data?.html === "string" ? data.html.replace(/\s+/g, " ").slice(0, 2000) : "";
-            const snippet = data?.description || condensedHtml.slice(0, 280);
-
-            return {
-              url: link,
-              title: data?.title || link,
-              description: data?.description || "",
-              snippet,
-              content: condensedHtml,
-              images: Array.isArray(data?.images) ? data.images : []
-            };
-          } catch (error) {
-            console.error("Error scraping link:", link, error);
-            return null;
-          }
-        })
-      );
-
-      const validSources = scrapedSources.filter(Boolean) as {
-        url: string;
-        title: string;
-        description: string;
-        snippet: string;
-        content: string;
-        images: string[];
-      }[];
-
-      if (!validSources.length) {
-        setMessages([
-          ...pendingMessages,
-          { role: "ai", content: [{ topic: "Web search", response: "Unable to fetch any sources. Please try again." }] }
-        ]);
-        return;
-      }
-
-      const imageGallery = Array.from(
-        new Set(
-          validSources.flatMap((source) => source.images || [])
-        )
-      ).filter(Boolean);
-
-      const contextPrompt = `You searched for "${trimmedQuery}". You crawled several sources and extracted condensed HTML/text. Create a concise, human-readable synthesis that answers the query, highlights key points, and keeps wording natural. Respond as JSON array of sections where each section has: topic (string), response (string or array of code snippets as in prior schema), and sources (array of {title, url, snippet}). Use the provided sources and do not fabricate URLs. Sources: ${JSON.stringify(
-        validSources.map(({ url, title, description, snippet, content }) => ({
-          url,
-          title,
-          description,
-          snippet,
-          content
-        }))
-      )}`;
-
-      const response = await api.post("/chat", {
-        messages: [...pendingMessages, { role: "human", content: contextPrompt }],
-        schema: [simpleChat, codeChat]
-      });
-
-      const aiPayloadRaw = Array.isArray(response.data) ? response.data.flat() : [response.data];
-      const enrichedPayload = aiPayloadRaw.map((section: any) => ({
-        ...section,
-        sources: validSources.map(({ title, url, snippet }) => ({ title, url, snippet })),
-        images: Array.isArray(section?.images) ? section.images : imageGallery
-      }));
-
-      const updatedMessages = [...pendingMessages, { role: "ai", content: enrichedPayload }];
+      let updatedMessages = [...pendingMessages, initialAiMessage];
       setMessages(updatedMessages);
 
-      const savedChat = await api.post("/save-chat", { userId: user?.user?.uid, messages: updatedMessages, chatId: selectedChat });
+      if (!links.length) {
+        const savedChat = await api.post("/save-chat", {
+          userId: user?.user?.uid,
+          messages: updatedMessages,
+          chatId: selectedChat,
+        });
+
+        if (!selectedChat) {
+          setChats([...chats, savedChat.data[0]]);
+          setSelectedChat(savedChat.data[0].id);
+        }
+
+        return;
+      }
+
+      for (const link of links) {
+        try {
+          const { data } = await api.get("/scrap-url", { params: { url: link } });
+          const condensedHtml = typeof data?.html === "string" ? data.html.replace(/\s+/g, " ").slice(0, 2000) : "";
+          const snippet = data?.description || condensedHtml.slice(0, 280) || "No content available.";
+          const title = safeTitle(data?.title, link);
+
+          const linkMessage = {
+            role: "ai",
+            content: [
+              {
+                topic: title,
+                response: snippet,
+                sources: [{ title, url: link, snippet }],
+                images: Array.isArray(data?.images) ? sanitizeImages(data.images) : [],
+              },
+            ],
+          };
+
+          updatedMessages = [...updatedMessages, linkMessage];
+          setMessages(updatedMessages);
+        } catch (error) {
+          console.error("Error scraping link:", link, error);
+
+          const errorMessage = {
+            role: "ai",
+            content: [
+              {
+                topic: "Source fetch failed",
+                response: `Unable to fetch ${link}. Skipping this source.`,
+                sources: [{ title: link, url: link, snippet: "" }],
+              },
+            ],
+          };
+
+          updatedMessages = [...updatedMessages, errorMessage];
+          setMessages(updatedMessages);
+        }
+      }
+
+      const savedChat = await api.post("/save-chat", {
+        userId: user?.user?.uid,
+        messages: updatedMessages,
+        chatId: selectedChat,
+      });
+
       if (!selectedChat) {
         setChats([...chats, savedChat.data[0]]);
         setSelectedChat(savedChat.data[0].id);
@@ -240,7 +233,7 @@ export default function Home() {
       console.error("Error completing web search:", error);
       setMessages([
         ...pendingMessages,
-        { role: "ai", content: [{ topic: "Web search", response: "Sorry, I couldn't complete that search. Please try again." }] }
+        { role: "ai", content: [{ topic: `Search error for "${trimmedQuery}"`, response: "Sorry, I couldn't complete that search. Please try again." }] }
       ]);
     } finally {
       setIsProcessingUrl(false);
@@ -297,7 +290,7 @@ export default function Home() {
             {/* sidebar */}
             <button className="button w-full text-default" onClick={handleNewChat}>+ New Chat</button>
             <hr className="border-accent my-default" />
-            <div className="overflow-y-auto h-[80%] p-default flex flex-col gap-default bg-secondary/10 rounded-md scrollbar-thin  " dir="rtl"> 
+            <div className="overflow-y-auto overflow-x-hidden h-[80%] p-default flex flex-col gap-default bg-secondary/10 rounded-md scrollbar-thin  " dir="rtl"> 
               {/* Chat history would go here */}
               {
                 chats.length > 0 ? chats.map((chat: any, index: number) => (
@@ -408,23 +401,29 @@ export default function Home() {
 
                           {Array.isArray(section?.sources) && section.sources.length > 0 ? (
                             <div className="grid sm:grid-cols-2 grid-cols-1 gap-small">
-                              {section.sources.map((source: any, sourceIndex: number) => (
-                                <a
-                                  key={`source-${sourceIndex}`}
-                                  href={source?.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-start gap-small p-small rounded-md bg-secondary/20 border border-accent/40 hover:border-accent transition"
-                                >
-                                  <FileTextIcon className="text-accent shrink-0" />
-                                  <div className="flex flex-col overflow-hidden">
-                                    <p className="text-body font-semibold truncate">{source?.title || source?.url}</p>
-                                    <p className="text-caption text-default/70 overflow-hidden text-ellipsis">
-                                      {source?.snippet || source?.url}
-                                    </p>
-                                  </div>
-                                </a>
-                              ))}
+                              {section.sources.map((source: any, sourceIndex: number) => {
+                                const displayTitle = source?.title && source.title.toLowerCase() !== "no title found"
+                                  ? source.title
+                                  : source?.url;
+
+                                return (
+                                  <a
+                                    key={`source-${sourceIndex}`}
+                                    href={source?.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-start gap-small p-small rounded-md bg-secondary/20 border border-accent/40 hover:border-accent transition"
+                                  >
+                                    <FileTextIcon className="text-accent shrink-0" />
+                                    <div className="flex flex-col overflow-hidden">
+                                      <p className="text-body font-semibold truncate">{displayTitle}</p>
+                                      <p className="text-caption text-default/70 overflow-hidden text-ellipsis">
+                                        {source?.snippet || source?.url}
+                                      </p>
+                                    </div>
+                                  </a>
+                                );
+                              })}
                             </div>
                           ) : null}
 
@@ -451,6 +450,9 @@ export default function Home() {
                                         src={imgSrc}
                                         alt={`Source ${imgIndex + 1}`}
                                         className="w-full h-full object-contain"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = "none";
+                                        }}
                                         loading="lazy"
                                       />
                                     </div>
@@ -482,7 +484,7 @@ export default function Home() {
                 <input
                   type="text"
                   className="flex-1 text-default outline-none"
-                  placeholder={isWebSearchMode ? "Enter a URL to summarize" : "Type your message..."}
+                  placeholder={isWebSearchMode ? "Enter a web search query" : "Type your message..."}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
