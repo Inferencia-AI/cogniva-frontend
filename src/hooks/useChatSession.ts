@@ -11,13 +11,6 @@ const sanitizeImages = (images: string[]) =>
     .filter((src) => typeof src === "string" && /^https?:\/\//i.test(src))
     .filter(Boolean);
 
-const safeTitle = (title: string | undefined, fallback: string) => {
-  if (!title) return fallback;
-  const cleaned = title.trim();
-  if (!cleaned || cleaned.toLowerCase() === "no title found") return fallback;
-  return cleaned;
-};
-
 export function useChatSession() {
   const [user, setUser] = useState<any>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -114,76 +107,154 @@ export function useChatSession() {
       setIsReplying(true);
 
       try {
-        const searchResponse = await api.get("/search", { params: { q: trimmedQuery } });
-        const links: string[] = Array.isArray(searchResponse.data?.links)
-          ? searchResponse.data.links.filter(Boolean)
-          : [];
-        const initialImages: string[] = Array.isArray(searchResponse.data?.images)
-          ? sanitizeImages(searchResponse.data.images)
-          : [];
-        const initialAnswer = searchResponse.data?.answer || "Here is what I found.";
+        const searchResponse = await api.post("/web-answer", {
+          question: trimmedQuery,
+        });
 
-        const initialAiMessage: ChatMessage = {
-          role: "ai",
-          content: [
-            {
-              topic: `"${trimmedQuery}"`,
-              response: initialAnswer,
-              sources: links.map((link) => ({ title: safeTitle(undefined, link), url: link, snippet: "" } as AiSource)),
-              images: initialImages,
-            },
-          ],
+        const sanitizeUrl = (value?: string | null) => {
+          if (typeof value !== "string") return undefined;
+          const trimmed = value.trim();
+          return /^https?:\/\//i.test(trimmed) ? trimmed : undefined;
         };
 
-        let updatedMessages: ChatMessage[] = [...pendingMessages, initialAiMessage];
-        setMessages(updatedMessages);
+        const sanitizeOtherEntry = (entry: any) => {
+          const link = sanitizeUrl(entry?.link);
+          const images = Array.isArray(entry?.data?.images) ? sanitizeImages(entry.data.images) : [];
+          const texts = Array.isArray(entry?.data?.texts) ? entry.data.texts.filter(Boolean) : [];
+          const links = Array.isArray(entry?.data?.links)
+            ? entry.data.links.map(sanitizeUrl).filter(Boolean)
+            : [];
 
-        if (!links.length) {
-          await saveChat(updatedMessages, selectedChatId);
-          return;
+          return {
+            link,
+            data: { images, texts, links },
+          };
+        };
+
+        const { promoted, wikipedia_answer, duckduckgo_answer, others } = searchResponse.data || {};
+        const sanitizedOthers = Array.isArray(others) ? others.map(sanitizeOtherEntry) : [];
+
+        const sections: AiSection[] = [];
+
+        if (promoted) {
+          const links = Array.isArray(promoted.links) ? promoted.links.filter(Boolean) : [];
+          sections.push({
+            type: "promoted",
+            topic: promoted.heading,
+            response: promoted.summary,
+            images: sanitizeImages(promoted.images || []),
+            sources: links.map((link: string) => ({ title: link, url: link, snippet: "" } as AiSource)),
+            promoted,
+          });
         }
 
-        for (const link of links) {
+        if (wikipedia_answer) {
+          const references = Array.isArray(wikipedia_answer.references) ? wikipedia_answer.references.filter(Boolean) : [];
+          sections.push({
+            type: "wikipedia",
+            topic: wikipedia_answer.question || "Wikipedia",
+            response: wikipedia_answer.summary,
+            sources: references.map((link: string) => ({ title: link, url: link, snippet: "" } as AiSource)),
+            wikipedia: wikipedia_answer,
+          });
+        }
+
+        if (duckduckgo_answer && (duckduckgo_answer.answer || duckduckgo_answer.link)) {
+          const link = duckduckgo_answer.link?.trim();
+          sections.push({
+            type: "duckduckgo",
+            topic: "DuckDuckGo",
+            response: duckduckgo_answer.answer,
+            sources: link ? [{ title: link, url: link, snippet: "" } as AiSource] : [],
+            duckduckgo: duckduckgo_answer,
+          });
+        }
+
+        if (sanitizedOthers.length) {
+          sections.push({ type: "others", topic: "Other sources", response: "", others: sanitizedOthers });
+        }
+
+        const summarizeSection = async (section: AiSection) => {
+          const baseText =
+            typeof section.response === "string"
+              ? section.response
+              : section.topic || "web result";
+
+          const prompt = `Summarize the following web result in 3 concise sentences. Keep it factual and brief.\n\n${baseText}`;
+
           try {
-            const { data } = await api.get("/scrap-url", { params: { url: link } });
-            const condensedHtml = typeof data?.html === "string" ? data.html.replace(/\s+/g, " ").slice(0, 2000) : "";
-            const snippet = data?.description || condensedHtml.slice(0, 280) || "No content available.";
-            const title = safeTitle(data?.title, link);
+            const res = await api.post("/chat", {
+              messages: [{ role: "human", content: prompt }],
+              schema: [simpleChat],
+            });
 
-            const linkMessage: ChatMessage = {
-              role: "ai",
-              content: [
-                {
-                  topic: title,
-                  response: snippet,
-                  sources: [{ title, url: link, snippet }],
-                  images: Array.isArray(data?.images) ? sanitizeImages(data.images) : [],
-                },
-              ],
-            };
+            const aiPayload = (Array.isArray(res.data) ? res.data.flat() : [res.data]) as AiSection[];
+            const first = aiPayload[0];
 
-            updatedMessages = [...updatedMessages, linkMessage];
-            setMessages(updatedMessages);
+            if (!first) return baseText;
+
+            if (typeof first === "string") return first;
+
+            if (Array.isArray(first.response)) {
+              return first.response
+                .map((snippet) => (typeof snippet === "string" ? snippet : snippet?.text || snippet?.code || ""))
+                .filter(Boolean)
+                .join("\n");
+            }
+
+            if (typeof first.response === "string") return first.response;
+
+            return baseText;
           } catch (error) {
-            console.error("Error scraping link:", link, error);
-
-            const errorMessage: ChatMessage = {
-              role: "ai",
-              content: [
-                {
-                  topic: "",
-                  response: `${link}`,
-                  sources: [{ title: link, url: link, snippet: "" }],
-                },
-              ],
-            };
-
-            updatedMessages = [...updatedMessages, errorMessage];
-            setMessages(updatedMessages);
+            console.error("Error summarizing section:", error);
+            return baseText;
           }
+        };
+
+        const summarizedSections: AiSection[] = [];
+
+        for (const section of sections) {
+          const summary = await summarizeSection(section);
+          const updatedSection: AiSection = {
+            ...section,
+            response: summary,
+          };
+
+          if (section.type === "promoted" && section.promoted) {
+            updatedSection.promoted = { ...section.promoted, summary };
+          }
+
+          if (section.type === "wikipedia" && section.wikipedia) {
+            updatedSection.wikipedia = { ...section.wikipedia, summary };
+          }
+
+          if (section.type === "duckduckgo" && section.duckduckgo) {
+            updatedSection.duckduckgo = { ...section.duckduckgo, answer: summary || section.duckduckgo.answer };
+          }
+
+          summarizedSections.push(updatedSection);
+
+          setMessages([...pendingMessages, { role: "ai", content: [...summarizedSections] }]);
         }
 
-        await saveChat(updatedMessages, selectedChatId);
+        if (!sections.length) {
+          setMessages([
+            ...pendingMessages,
+            {
+              role: "ai",
+              content: [
+                {
+                  topic: `"${trimmedQuery}"`,
+                  response: "No results found.",
+                  sources: [],
+                  images: [],
+                },
+              ],
+            },
+          ]);
+        }
+
+        await saveChat([...pendingMessages, { role: "ai", content: summarizedSections.length ? summarizedSections : [] }], selectedChatId);
       } catch (error) {
         console.error("Error completing web search:", error);
         setMessages((prev) => [
