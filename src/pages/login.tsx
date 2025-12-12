@@ -1,4 +1,4 @@
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, FacebookAuthProvider } from "firebase/auth";
 import { auth } from "../utils/firebaseClient";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
@@ -15,7 +15,9 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const provider = new GoogleAuthProvider();
+  const googleProvider = new GoogleAuthProvider();
+  const facebookProvider = new FacebookAuthProvider();
+
   const navigate = useNavigate();
 
   const persistToken = async (tokenPromise: Promise<string>) => {
@@ -31,10 +33,18 @@ export default function Login() {
   };
 
   const signInWithGoogle = async () => {
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     return user.getIdToken();
   };
+
+
+  const signInWithFacebook = async () => {
+    const result = await signInWithPopup(auth, facebookProvider);
+    const user = result.user;
+    return user.getIdToken();
+  }
+
 
   const handleEmailPasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -186,6 +196,25 @@ export default function Login() {
               className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Continue with Google
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                setError(null);
+                setIsSubmitting(true);
+                try {
+                  await persistToken(signInWithFacebook());
+                } catch (err: any) {
+                  setError(err?.message || "Facebook sign-in failed. Please try again.");
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              disabled={isSubmitting}
+              className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Continue with Facebook
             </button>
 
             <p className="text-center text-xs text-[var(--text-color-default)]/80">
