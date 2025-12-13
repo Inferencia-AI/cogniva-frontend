@@ -80,7 +80,7 @@ export default function OtherWebResults({ data, summary }: OtherWebResultsProps)
                   {selected.data.images.filter(Boolean).map((src, imageIndex) => (
                     <img
                       key={`modal-img-${imageIndex}`}
-                      src={src}
+                      src={src || ""}
                       alt={`Source image ${imageIndex + 1}`}
                       className="w-full h-32 object-cover rounded-md"
                     />
@@ -93,7 +93,7 @@ export default function OtherWebResults({ data, summary }: OtherWebResultsProps)
                   {selected.data.links.filter(Boolean).map((link, linkIndex) => (
                     <SourceCard
                       key={`modal-link-${linkIndex}`}
-                      source={{ title: link, url: link }}
+                      source={{ title: link || "", url: link || "" }}
                       onOpen={(source) => window.open(source.url, "_blank")}
                     />
                   ))}

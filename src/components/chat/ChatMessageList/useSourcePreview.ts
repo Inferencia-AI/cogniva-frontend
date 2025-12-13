@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../../../utils/api";
-import type { Source, PreviewBlock, ScrapUrlResponse } from "../../../types/chat";
+import type { Source, PreviewBlock } from "../../../types/chat";
 
 export function useSourcePreview(source: Source | null) {
   const [previewHtml, setPreviewHtml] = useState<string>("");
