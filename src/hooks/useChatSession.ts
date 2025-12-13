@@ -4,7 +4,7 @@ import api from "../utils/api";
 import simpleChat from "../schemas/simpleChat.json" with { type: "json" };
 import codeChat from "../schemas/codeChatSchema.json" with { type: "json" };
 import { auth } from "../utils/firebaseClient";
-import type { ChatMessage, ChatSummary, Source, AiSection, UserData } from "../types/chat";
+import type { ChatMessage, ChatSummary, Source, AiSection, UserData, ProcessedArticle } from "../types/chat";
 
 // =============================================================================
 // Utility Functions
@@ -215,6 +215,88 @@ export function useChatSession() {
     }
   };
 
+  const fetchArticlesAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      // Fetch raw articles with images
+      const res = await api.post("/articles-answer", { question });
+      const { articles, images } = res.data || {};
+      if (!Array.isArray(articles) || !articles.length) return null;
+
+      // Sanitize fetched images
+      const fetchedImages = sanitizeImages(images || []);
+
+      // Use AI to extract relevant information from each article
+      const processedArticles: ProcessedArticle[] = [];
+      let imageIndex = 0;
+
+      for (const article of articles.slice(0, 5)) { // Limit to 5 articles
+        if (!article.text || article.text.length < 50) continue;
+
+        try {
+          const extractionPrompt = `You are an information extractor. The user asked: "${question}"
+
+Here is an article titled "${article.title || 'Untitled'}":
+${article.text.slice(0, 2000)}
+
+Extract ONLY the information that directly answers or relates to the user's question. Ignore any unrelated information. If the article doesn't contain relevant information to the question, respond with "NOT_RELEVANT".
+
+Provide a concise 2-3 sentence summary of the relevant information only.`;
+
+          const aiRes = await api.post("/chat", {
+            messages: [{ role: "human", content: extractionPrompt }],
+            schema: [simpleChat],
+          });
+
+          const aiPayload = Array.isArray(aiRes.data) ? aiRes.data.flat() : [aiRes.data];
+          const first = aiPayload[0];
+          let summary = "";
+
+          if (typeof first === "string") {
+            summary = first;
+          } else if (first?.response) {
+            summary = typeof first.response === "string" 
+              ? first.response 
+              : Array.isArray(first.response) 
+                ? first.response.map((s: { text?: string }) => s?.text || "").join(" ") 
+                : "";
+          }
+
+          // Skip if AI determined it's not relevant
+          if (summary.includes("NOT_RELEVANT") || summary.length < 20) continue;
+
+          // Assign an image to this article from the fetched images
+          const articleImage = fetchedImages[imageIndex] || undefined;
+          if (articleImage) imageIndex++;
+
+          processedArticles.push({
+            url: article.url,
+            title: article.title,
+            summary,
+            authors: article.authors,
+            published_date: article.published_date,
+            image: articleImage,
+          });
+        } catch {
+          // Skip articles that fail to process
+          continue;
+        }
+      }
+
+      if (!processedArticles.length) return null;
+
+      return {
+        type: "articles",
+        topic: "Related Articles",
+        response: `Found ${processedArticles.length} relevant articles`,
+        sources: processedArticles.map((a) => ({ title: a.title, url: a.url, snippet: a.summary } as Source)),
+        articles: processedArticles,
+        images: fetchedImages,
+      };
+    } catch {
+      return null;
+    }
+  };
+
   const handleWebSearch = useCallback(
     async (trimmedQuery: string) => {
       const pendingMessages: ChatMessage[] = [...messages, { role: "human", content: trimmedQuery }];
@@ -236,6 +318,13 @@ export function useChatSession() {
           updateMessagesWithSections(sections);
         }
 
+        // Fetch articles early (displayed prominently like promoted)
+        const articlesSection = await fetchArticlesAnswer(trimmedQuery);
+        if (articlesSection) {
+          sections.push(articlesSection);
+          updateMessagesWithSections(sections);
+        }
+
         // Fetch Wikipedia and DuckDuckGo in parallel
         const [wikipediaSection, duckduckgoSection] = await Promise.all([
           fetchWikipediaAnswer(trimmedQuery),
@@ -254,6 +343,7 @@ export function useChatSession() {
 
         // Fetch others last (slowest)
         const othersSection = await fetchOthersAnswer(trimmedQuery);
+
         if (othersSection) {
           sections.push(othersSection);
           updateMessagesWithSections(sections);

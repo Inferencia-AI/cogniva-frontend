@@ -4,7 +4,7 @@
 
 export type ChatRole = "human" | "ai";
 
-export type WebAnswerSectionType = "answer" | "image" | "promoted" | "wikipedia" | "duckduckgo" | "others";
+export type WebAnswerSectionType = "answer" | "image" | "promoted" | "wikipedia" | "duckduckgo" | "others" | "articles";
 
 // =============================================================================
 // Source Types - Used for displaying sources/references
@@ -38,6 +38,7 @@ export interface AiSection {
   wikipedia?: WikipediaAnswerData;
   duckduckgo?: DuckDuckGoAnswerData;
   others?: OtherAnswerData[];
+  articles?: ProcessedArticle[];
   image?: string;
 }
 
@@ -117,6 +118,15 @@ export interface Article {
   text?: string;
   authors?: string[];
   published_date?: string;
+}
+
+export interface ProcessedArticle {
+  url?: string;
+  title?: string;
+  summary?: string;
+  authors?: string[];
+  published_date?: string;
+  image?: string;
 }
 
 export interface ScrapUrlResponse {

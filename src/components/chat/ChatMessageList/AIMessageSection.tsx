@@ -6,6 +6,7 @@ import PromotedAnswer from "./PromotedWebAnswer";
 import WikipediaAnswer from "./WikipediaAnswer";
 import DuckDuckGoAnswer from "./DuckDuckGoAnswer";
 import OtherWebResults from "./OtherWebResults";
+import ArticlesAnswer from "./ArticlesAnswer";
 import type { AiSection, Source } from "../../../types/chat";
 
 interface AIMessageSectionProps {
@@ -42,6 +43,10 @@ export default function AIMessageSection({ section, onOpenSource }: AIMessageSec
 
   if (section?.type === "others") {
     return <OtherWebResults data={section.others} summary={typeof section.response === "string" ? section.response : undefined} />;
+  }
+
+  if (section?.type === "articles") {
+    return <ArticlesAnswer articles={section.articles} />;
   }
 
   return (
