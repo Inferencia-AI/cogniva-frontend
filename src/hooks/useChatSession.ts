@@ -4,22 +4,28 @@ import api from "../utils/api";
 import simpleChat from "../schemas/simpleChat.json" with { type: "json" };
 import codeChat from "../schemas/codeChatSchema.json" with { type: "json" };
 import { auth } from "../utils/firebaseClient";
-import type { ChatMessage, ChatSummary, AiSource, AiSection } from "../types/chat";
+import type { ChatMessage, ChatSummary, Source, AiSection, UserData, ProcessedArticle } from "../types/chat";
 
-const sanitizeImages = (images: string[]) =>
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+const sanitizeImages = (images: (string | null | undefined)[]): string[] =>
   (images || [])
-    .filter((src) => typeof src === "string" && /^https?:\/\//i.test(src))
-    .filter(Boolean);
+    .filter((src): src is string => typeof src === "string" && /^https?:\/\//i.test(src));
 
-const safeTitle = (title: string | undefined, fallback: string) => {
-  if (!title) return fallback;
-  const cleaned = title.trim();
-  if (!cleaned || cleaned.toLowerCase() === "no title found") return fallback;
-  return cleaned;
+const sanitizeUrl = (value?: string | null): string | undefined => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : undefined;
 };
 
+// =============================================================================
+// useChatSession Hook - Manages chat state and API interactions
+// =============================================================================
+
 export function useChatSession() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<number | undefined>(undefined);
@@ -27,9 +33,12 @@ export function useChatSession() {
   const [isWebSearchMode, setIsWebSearchMode] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
 
+  // ---------------------------------------------------------------------------
+  // Fetch user data from API
+  // ---------------------------------------------------------------------------
   const fetchUserData = useCallback(async () => {
     try {
-      const response = await api.get("/user");
+      const response = await api.get<UserData>("/user");
       setUser(response.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -39,17 +48,23 @@ export function useChatSession() {
     }
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Fetch user's chat history
+  // ---------------------------------------------------------------------------
   const fetchChats = useCallback(async () => {
     try {
       const uid = user?.user?.uid;
       if (!uid) return;
-      const response = await api.get(`/chats/${uid}`);
+      const response = await api.get<ChatSummary[]>(`/chats/${uid}`);
       setChats(response.data);
     } catch (error) {
       console.error("Error fetching chat history:", error);
     }
   }, [user]);
 
+  // ---------------------------------------------------------------------------
+  // Save chat to the database
+  // ---------------------------------------------------------------------------
   const saveChat = useCallback(
     async (chatMessages: ChatMessage[], chatId?: number) => {
       const response = await api.post("/save-chat", {
@@ -75,6 +90,9 @@ export function useChatSession() {
     [user],
   );
 
+  // ---------------------------------------------------------------------------
+  // Chat actions
+  // ---------------------------------------------------------------------------
   const startNewChat = useCallback(() => {
     setMessages([]);
     setSelectedChatId(undefined);
@@ -85,6 +103,9 @@ export function useChatSession() {
     setMessages(chat.messages || []);
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Send a regular chat message
+  // ---------------------------------------------------------------------------
   const handleSendMessage = useCallback(
     async (prompt: string) => {
       const newMessages: ChatMessage[] = [...messages, { role: "human", content: prompt }];
@@ -106,6 +127,176 @@ export function useChatSession() {
     [messages, selectedChatId, saveChat],
   );
 
+  // ---------------------------------------------------------------------------
+  // Web search handler - processes search results into structured sections
+  // ---------------------------------------------------------------------------
+  const sanitizeOtherEntry = (entry: { link?: string; data?: { images?: string[]; texts?: string[]; links?: string[] } }) => {
+    const link = sanitizeUrl(entry?.link);
+    const images = Array.isArray(entry?.data?.images) ? sanitizeImages(entry.data.images) : [];
+    const texts = Array.isArray(entry?.data?.texts) ? entry.data.texts.filter(Boolean) : [];
+    const links = Array.isArray(entry?.data?.links)
+      ? entry.data.links.map(sanitizeUrl).filter((l): l is string => Boolean(l))
+      : [];
+
+    return { link, data: { images, texts, links } };
+  };
+
+  // ---------------------------------------------------------------------------
+  // Individual API fetchers for progressive loading
+  // ---------------------------------------------------------------------------
+  const fetchPromotedAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/promoted-answer", { question });
+      const { promoted } = res.data || {};
+      if (!promoted) return null;
+
+      const links = Array.isArray(promoted.links) ? promoted.links.filter(Boolean) : [];
+      return {
+        type: "promoted",
+        topic: promoted.heading,
+        response: promoted.summary,
+        images: sanitizeImages(promoted.images || []),
+        sources: links.map((link: string) => ({ title: link, url: link, snippet: "" } as Source)),
+        promoted,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchWikipediaAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/wikipedia-answer", { question });
+      const { wikipedia_answer } = res.data || {};
+      if (!wikipedia_answer) return null;
+
+      const references = Array.isArray(wikipedia_answer.references) ? wikipedia_answer.references.filter(Boolean) : [];
+      return {
+        type: "wikipedia",
+        topic: wikipedia_answer.question || "Wikipedia",
+        response: wikipedia_answer.summary,
+        sources: references.map((link: string) => ({ title: link, url: link, snippet: "" } as Source)),
+        wikipedia: wikipedia_answer,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchDuckDuckGoAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/duckduckgo-answer", { question });
+      const { duckduckgo_answer } = res.data || {};
+      if (!duckduckgo_answer || (!duckduckgo_answer.answer && !duckduckgo_answer.link)) return null;
+
+      const link = duckduckgo_answer.link?.trim();
+      return {
+        type: "duckduckgo",
+        topic: "DuckDuckGo",
+        response: duckduckgo_answer.answer,
+        sources: link ? [{ title: link, url: link, snippet: "" } as Source] : [],
+        duckduckgo: duckduckgo_answer,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchOthersAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/others-answer", { question });
+      const { others } = res.data || {};
+      if (!Array.isArray(others) || !others.length) return null;
+
+      const sanitizedOthers = others.map(sanitizeOtherEntry);
+      return { type: "others", topic: "Other sources", response: "", others: sanitizedOthers };
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchArticlesAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      // Fetch raw articles with images
+      const res = await api.post("/articles-answer", { question });
+      const { articles, images } = res.data || {};
+      if (!Array.isArray(articles) || !articles.length) return null;
+
+      // Sanitize fetched images
+      const fetchedImages = sanitizeImages(images || []);
+
+      // Use AI to extract relevant information from each article
+      const processedArticles: ProcessedArticle[] = [];
+      let imageIndex = 0;
+
+      for (const article of articles.slice(0, 5)) { // Limit to 5 articles
+        if (!article.text || article.text.length < 50) continue;
+
+        try {
+          const extractionPrompt = `You are an information extractor. The user asked: "${question}"
+
+Here is an article titled "${article.title || 'Untitled'}":
+${article.text.slice(0, 2000)}
+
+Extract ONLY the information that directly answers or relates to the user's question. Ignore any unrelated information. If the article doesn't contain relevant information to the question, respond with "NOT_RELEVANT".
+
+Provide a concise 2-3 sentence summary of the relevant information only.`;
+
+          const aiRes = await api.post("/chat", {
+            messages: [{ role: "human", content: extractionPrompt }],
+            schema: [simpleChat],
+          });
+
+          const aiPayload = Array.isArray(aiRes.data) ? aiRes.data.flat() : [aiRes.data];
+          const first = aiPayload[0];
+          let summary = "";
+
+          if (typeof first === "string") {
+            summary = first;
+          } else if (first?.response) {
+            summary = typeof first.response === "string" 
+              ? first.response 
+              : Array.isArray(first.response) 
+                ? first.response.map((s: { text?: string }) => s?.text || "").join(" ") 
+                : "";
+          }
+
+          // Skip if AI determined it's not relevant
+          if (summary.includes("NOT_RELEVANT") || summary.length < 20) continue;
+
+          // Assign an image to this article from the fetched images
+          const articleImage = fetchedImages[imageIndex] || undefined;
+          if (articleImage) imageIndex++;
+
+          processedArticles.push({
+            url: article.url,
+            title: article.title,
+            summary,
+            authors: article.authors,
+            published_date: article.published_date,
+            image: articleImage,
+          });
+        } catch {
+          // Skip articles that fail to process
+          continue;
+        }
+      }
+
+      if (!processedArticles.length) return null;
+
+      return {
+        type: "articles",
+        topic: "Related Articles",
+        response: `Found ${processedArticles.length} relevant articles`,
+        sources: processedArticles.map((a) => ({ title: a.title, url: a.url, snippet: a.summary } as Source)),
+        articles: processedArticles,
+        images: fetchedImages,
+      };
+    } catch {
+      return null;
+    }
+  };
+
   const handleWebSearch = useCallback(
     async (trimmedQuery: string) => {
       const pendingMessages: ChatMessage[] = [...messages, { role: "human", content: trimmedQuery }];
@@ -113,77 +304,70 @@ export function useChatSession() {
       setIsProcessingUrl(true);
       setIsReplying(true);
 
+      const sections: AiSection[] = [];
+
+      const updateMessagesWithSections = (newSections: AiSection[]) => {
+        setMessages([...pendingMessages, { role: "ai", content: [...newSections] }]);
+      };
+
       try {
-        const searchResponse = await api.get("/search", { params: { q: trimmedQuery } });
-        const links: string[] = Array.isArray(searchResponse.data?.links)
-          ? searchResponse.data.links.filter(Boolean)
-          : [];
-        const initialImages: string[] = Array.isArray(searchResponse.data?.images)
-          ? sanitizeImages(searchResponse.data.images)
-          : [];
-        const initialAnswer = searchResponse.data?.answer || "Here is what I found.";
+        // Fetch promoted answer first (fastest, special case)
+        const promotedSection = await fetchPromotedAnswer(trimmedQuery);
+        if (promotedSection) {
+          sections.push(promotedSection);
+          updateMessagesWithSections(sections);
+        }
 
-        const initialAiMessage: ChatMessage = {
-          role: "ai",
-          content: [
+        // Fetch articles early (displayed prominently like promoted)
+        const articlesSection = await fetchArticlesAnswer(trimmedQuery);
+        if (articlesSection) {
+          sections.push(articlesSection);
+          updateMessagesWithSections(sections);
+        }
+
+        // Fetch Wikipedia and DuckDuckGo in parallel
+        const [wikipediaSection, duckduckgoSection] = await Promise.all([
+          fetchWikipediaAnswer(trimmedQuery),
+          fetchDuckDuckGoAnswer(trimmedQuery),
+        ]);
+
+        if (wikipediaSection) {
+          sections.push(wikipediaSection);
+          updateMessagesWithSections(sections);
+        }
+
+        if (duckduckgoSection) {
+          sections.push(duckduckgoSection);
+          updateMessagesWithSections(sections);
+        }
+
+        // Fetch others last (slowest)
+        const othersSection = await fetchOthersAnswer(trimmedQuery);
+
+        if (othersSection) {
+          sections.push(othersSection);
+          updateMessagesWithSections(sections);
+        }
+
+        // If no results were found
+        if (!sections.length) {
+          setMessages([
+            ...pendingMessages,
             {
-              topic: `"${trimmedQuery}"`,
-              response: initialAnswer,
-              sources: links.map((link) => ({ title: safeTitle(undefined, link), url: link, snippet: "" } as AiSource)),
-              images: initialImages,
+              role: "ai",
+              content: [
+                {
+                  topic: `"${trimmedQuery}"`,
+                  response: "No results found.",
+                  sources: [],
+                  images: [],
+                },
+              ],
             },
-          ],
-        };
-
-        let updatedMessages: ChatMessage[] = [...pendingMessages, initialAiMessage];
-        setMessages(updatedMessages);
-
-        if (!links.length) {
-          await saveChat(updatedMessages, selectedChatId);
-          return;
+          ]);
         }
 
-        for (const link of links) {
-          try {
-            const { data } = await api.get("/scrap-url", { params: { url: link } });
-            const condensedHtml = typeof data?.html === "string" ? data.html.replace(/\s+/g, " ").slice(0, 2000) : "";
-            const snippet = data?.description || condensedHtml.slice(0, 280) || "No content available.";
-            const title = safeTitle(data?.title, link);
-
-            const linkMessage: ChatMessage = {
-              role: "ai",
-              content: [
-                {
-                  topic: title,
-                  response: snippet,
-                  sources: [{ title, url: link, snippet }],
-                  images: Array.isArray(data?.images) ? sanitizeImages(data.images) : [],
-                },
-              ],
-            };
-
-            updatedMessages = [...updatedMessages, linkMessage];
-            setMessages(updatedMessages);
-          } catch (error) {
-            console.error("Error scraping link:", link, error);
-
-            const errorMessage: ChatMessage = {
-              role: "ai",
-              content: [
-                {
-                  topic: "",
-                  response: `${link}`,
-                  sources: [{ title: link, url: link, snippet: "" }],
-                },
-              ],
-            };
-
-            updatedMessages = [...updatedMessages, errorMessage];
-            setMessages(updatedMessages);
-          }
-        }
-
-        await saveChat(updatedMessages, selectedChatId);
+        await saveChat([...pendingMessages, { role: "ai", content: sections.length ? sections : [] }], selectedChatId);
       } catch (error) {
         console.error("Error completing web search:", error);
         setMessages((prev) => [
