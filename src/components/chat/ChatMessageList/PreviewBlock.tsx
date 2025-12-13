@@ -1,8 +1,9 @@
 import { CodeBlock } from "react-code-block";
 import Markdown from "react-markdown";
+import type { PreviewBlock as PreviewBlockType } from "../../../types/chat";
 
 interface PreviewBlockProps {
-  block: any;
+  block: PreviewBlockType;
   baseUrl?: string;
 }
 

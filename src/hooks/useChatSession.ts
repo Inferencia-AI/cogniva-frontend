@@ -4,15 +4,28 @@ import api from "../utils/api";
 import simpleChat from "../schemas/simpleChat.json" with { type: "json" };
 import codeChat from "../schemas/codeChatSchema.json" with { type: "json" };
 import { auth } from "../utils/firebaseClient";
-import type { ChatMessage, ChatSummary, AiSource, AiSection } from "../types/chat";
+import type { ChatMessage, ChatSummary, Source, AiSection, UserData } from "../types/chat";
 
-const sanitizeImages = (images: string[]) =>
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+const sanitizeImages = (images: (string | null | undefined)[]): string[] =>
   (images || [])
-    .filter((src) => typeof src === "string" && /^https?:\/\//i.test(src))
-    .filter(Boolean);
+    .filter((src): src is string => typeof src === "string" && /^https?:\/\//i.test(src));
+
+const sanitizeUrl = (value?: string | null): string | undefined => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : undefined;
+};
+
+// =============================================================================
+// useChatSession Hook - Manages chat state and API interactions
+// =============================================================================
 
 export function useChatSession() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<number | undefined>(undefined);
@@ -20,9 +33,12 @@ export function useChatSession() {
   const [isWebSearchMode, setIsWebSearchMode] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
 
+  // ---------------------------------------------------------------------------
+  // Fetch user data from API
+  // ---------------------------------------------------------------------------
   const fetchUserData = useCallback(async () => {
     try {
-      const response = await api.get("/user");
+      const response = await api.get<UserData>("/user");
       setUser(response.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -32,17 +48,23 @@ export function useChatSession() {
     }
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Fetch user's chat history
+  // ---------------------------------------------------------------------------
   const fetchChats = useCallback(async () => {
     try {
       const uid = user?.user?.uid;
       if (!uid) return;
-      const response = await api.get(`/chats/${uid}`);
+      const response = await api.get<ChatSummary[]>(`/chats/${uid}`);
       setChats(response.data);
     } catch (error) {
       console.error("Error fetching chat history:", error);
     }
   }, [user]);
 
+  // ---------------------------------------------------------------------------
+  // Save chat to the database
+  // ---------------------------------------------------------------------------
   const saveChat = useCallback(
     async (chatMessages: ChatMessage[], chatId?: number) => {
       const response = await api.post("/save-chat", {
@@ -68,6 +90,9 @@ export function useChatSession() {
     [user],
   );
 
+  // ---------------------------------------------------------------------------
+  // Chat actions
+  // ---------------------------------------------------------------------------
   const startNewChat = useCallback(() => {
     setMessages([]);
     setSelectedChatId(undefined);
@@ -78,6 +103,9 @@ export function useChatSession() {
     setMessages(chat.messages || []);
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Send a regular chat message
+  // ---------------------------------------------------------------------------
   const handleSendMessage = useCallback(
     async (prompt: string) => {
       const newMessages: ChatMessage[] = [...messages, { role: "human", content: prompt }];
@@ -99,6 +127,94 @@ export function useChatSession() {
     [messages, selectedChatId, saveChat],
   );
 
+  // ---------------------------------------------------------------------------
+  // Web search handler - processes search results into structured sections
+  // ---------------------------------------------------------------------------
+  const sanitizeOtherEntry = (entry: { link?: string; data?: { images?: string[]; texts?: string[]; links?: string[] } }) => {
+    const link = sanitizeUrl(entry?.link);
+    const images = Array.isArray(entry?.data?.images) ? sanitizeImages(entry.data.images) : [];
+    const texts = Array.isArray(entry?.data?.texts) ? entry.data.texts.filter(Boolean) : [];
+    const links = Array.isArray(entry?.data?.links)
+      ? entry.data.links.map(sanitizeUrl).filter((l): l is string => Boolean(l))
+      : [];
+
+    return { link, data: { images, texts, links } };
+  };
+
+  // ---------------------------------------------------------------------------
+  // Individual API fetchers for progressive loading
+  // ---------------------------------------------------------------------------
+  const fetchPromotedAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/promoted-answer", { question });
+      const { promoted } = res.data || {};
+      if (!promoted) return null;
+
+      const links = Array.isArray(promoted.links) ? promoted.links.filter(Boolean) : [];
+      return {
+        type: "promoted",
+        topic: promoted.heading,
+        response: promoted.summary,
+        images: sanitizeImages(promoted.images || []),
+        sources: links.map((link: string) => ({ title: link, url: link, snippet: "" } as Source)),
+        promoted,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchWikipediaAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/wikipedia-answer", { question });
+      const { wikipedia_answer } = res.data || {};
+      if (!wikipedia_answer) return null;
+
+      const references = Array.isArray(wikipedia_answer.references) ? wikipedia_answer.references.filter(Boolean) : [];
+      return {
+        type: "wikipedia",
+        topic: wikipedia_answer.question || "Wikipedia",
+        response: wikipedia_answer.summary,
+        sources: references.map((link: string) => ({ title: link, url: link, snippet: "" } as Source)),
+        wikipedia: wikipedia_answer,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchDuckDuckGoAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/duckduckgo-answer", { question });
+      const { duckduckgo_answer } = res.data || {};
+      if (!duckduckgo_answer || (!duckduckgo_answer.answer && !duckduckgo_answer.link)) return null;
+
+      const link = duckduckgo_answer.link?.trim();
+      return {
+        type: "duckduckgo",
+        topic: "DuckDuckGo",
+        response: duckduckgo_answer.answer,
+        sources: link ? [{ title: link, url: link, snippet: "" } as Source] : [],
+        duckduckgo: duckduckgo_answer,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchOthersAnswer = async (question: string): Promise<AiSection | null> => {
+    try {
+      const res = await api.post("/others-answer", { question });
+      const { others } = res.data || {};
+      if (!Array.isArray(others) || !others.length) return null;
+
+      const sanitizedOthers = others.map(sanitizeOtherEntry);
+      return { type: "others", topic: "Other sources", response: "", others: sanitizedOthers };
+    } catch {
+      return null;
+    }
+  };
+
   const handleWebSearch = useCallback(
     async (trimmedQuery: string) => {
       const pendingMessages: ChatMessage[] = [...messages, { role: "human", content: trimmedQuery }];
@@ -106,137 +222,44 @@ export function useChatSession() {
       setIsProcessingUrl(true);
       setIsReplying(true);
 
+      const sections: AiSection[] = [];
+
+      const updateMessagesWithSections = (newSections: AiSection[]) => {
+        setMessages([...pendingMessages, { role: "ai", content: [...newSections] }]);
+      };
+
       try {
-        const searchResponse = await api.post("/web-answer", {
-          question: trimmedQuery,
-        });
-
-        const sanitizeUrl = (value?: string | null) => {
-          if (typeof value !== "string") return undefined;
-          const trimmed = value.trim();
-          return /^https?:\/\//i.test(trimmed) ? trimmed : undefined;
-        };
-
-        const sanitizeOtherEntry = (entry: any) => {
-          const link = sanitizeUrl(entry?.link);
-          const images = Array.isArray(entry?.data?.images) ? sanitizeImages(entry.data.images) : [];
-          const texts = Array.isArray(entry?.data?.texts) ? entry.data.texts.filter(Boolean) : [];
-          const links = Array.isArray(entry?.data?.links)
-            ? entry.data.links.map(sanitizeUrl).filter(Boolean)
-            : [];
-
-          return {
-            link,
-            data: { images, texts, links },
-          };
-        };
-
-        const { promoted, wikipedia_answer, duckduckgo_answer, others } = searchResponse.data || {};
-        const sanitizedOthers = Array.isArray(others) ? others.map(sanitizeOtherEntry) : [];
-
-        const sections: AiSection[] = [];
-
-        if (promoted) {
-          const links = Array.isArray(promoted.links) ? promoted.links.filter(Boolean) : [];
-          sections.push({
-            type: "promoted",
-            topic: promoted.heading,
-            response: promoted.summary,
-            images: sanitizeImages(promoted.images || []),
-            sources: links.map((link: string) => ({ title: link, url: link, snippet: "" } as AiSource)),
-            promoted,
-          });
+        // Fetch promoted answer first (fastest, special case)
+        const promotedSection = await fetchPromotedAnswer(trimmedQuery);
+        if (promotedSection) {
+          sections.push(promotedSection);
+          updateMessagesWithSections(sections);
         }
 
-        if (wikipedia_answer) {
-          const references = Array.isArray(wikipedia_answer.references) ? wikipedia_answer.references.filter(Boolean) : [];
-          sections.push({
-            type: "wikipedia",
-            topic: wikipedia_answer.question || "Wikipedia",
-            response: wikipedia_answer.summary,
-            sources: references.map((link: string) => ({ title: link, url: link, snippet: "" } as AiSource)),
-            wikipedia: wikipedia_answer,
-          });
+        // Fetch Wikipedia and DuckDuckGo in parallel
+        const [wikipediaSection, duckduckgoSection] = await Promise.all([
+          fetchWikipediaAnswer(trimmedQuery),
+          fetchDuckDuckGoAnswer(trimmedQuery),
+        ]);
+
+        if (wikipediaSection) {
+          sections.push(wikipediaSection);
+          updateMessagesWithSections(sections);
         }
 
-        if (duckduckgo_answer && (duckduckgo_answer.answer || duckduckgo_answer.link)) {
-          const link = duckduckgo_answer.link?.trim();
-          sections.push({
-            type: "duckduckgo",
-            topic: "DuckDuckGo",
-            response: duckduckgo_answer.answer,
-            sources: link ? [{ title: link, url: link, snippet: "" } as AiSource] : [],
-            duckduckgo: duckduckgo_answer,
-          });
+        if (duckduckgoSection) {
+          sections.push(duckduckgoSection);
+          updateMessagesWithSections(sections);
         }
 
-        if (sanitizedOthers.length) {
-          sections.push({ type: "others", topic: "Other sources", response: "", others: sanitizedOthers });
+        // Fetch others last (slowest)
+        const othersSection = await fetchOthersAnswer(trimmedQuery);
+        if (othersSection) {
+          sections.push(othersSection);
+          updateMessagesWithSections(sections);
         }
 
-        const summarizeSection = async (section: AiSection) => {
-          const baseText =
-            typeof section.response === "string"
-              ? section.response
-              : section.topic || "web result";
-
-          const prompt = `Summarize the following web result in 3 concise sentences. Keep it factual and brief.\n\n${baseText}`;
-
-          try {
-            const res = await api.post("/chat", {
-              messages: [{ role: "human", content: prompt }],
-              schema: [simpleChat],
-            });
-
-            const aiPayload = (Array.isArray(res.data) ? res.data.flat() : [res.data]) as AiSection[];
-            const first = aiPayload[0];
-
-            if (!first) return baseText;
-
-            if (typeof first === "string") return first;
-
-            if (Array.isArray(first.response)) {
-              return first.response
-                .map((snippet) => (typeof snippet === "string" ? snippet : snippet?.text || snippet?.code || ""))
-                .filter(Boolean)
-                .join("\n");
-            }
-
-            if (typeof first.response === "string") return first.response;
-
-            return baseText;
-          } catch (error) {
-            console.error("Error summarizing section:", error);
-            return baseText;
-          }
-        };
-
-        const summarizedSections: AiSection[] = [];
-
-        for (const section of sections) {
-          const summary = await summarizeSection(section);
-          const updatedSection: AiSection = {
-            ...section,
-            response: summary,
-          };
-
-          if (section.type === "promoted" && section.promoted) {
-            updatedSection.promoted = { ...section.promoted, summary };
-          }
-
-          if (section.type === "wikipedia" && section.wikipedia) {
-            updatedSection.wikipedia = { ...section.wikipedia, summary };
-          }
-
-          if (section.type === "duckduckgo" && section.duckduckgo) {
-            updatedSection.duckduckgo = { ...section.duckduckgo, answer: summary || section.duckduckgo.answer };
-          }
-
-          summarizedSections.push(updatedSection);
-
-          setMessages([...pendingMessages, { role: "ai", content: [...summarizedSections] }]);
-        }
-
+        // If no results were found
         if (!sections.length) {
           setMessages([
             ...pendingMessages,
@@ -254,7 +277,7 @@ export function useChatSession() {
           ]);
         }
 
-        await saveChat([...pendingMessages, { role: "ai", content: summarizedSections.length ? summarizedSections : [] }], selectedChatId);
+        await saveChat([...pendingMessages, { role: "ai", content: sections.length ? sections : [] }], selectedChatId);
       } catch (error) {
         console.error("Error completing web search:", error);
         setMessages((prev) => [

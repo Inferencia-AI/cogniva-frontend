@@ -3,17 +3,18 @@ import { TypingIndicator } from "./TypingIndicator";
 import HumanMessage from "./ChatMessageList/HumanMessage";
 import AIMessage from "./ChatMessageList/AIMessage";
 import SourcePreview from "./ChatMessageList/SourcePreview";
+import type { ChatMessage, Source } from "../../types/chat";
 
 interface ChatMessageListProps {
-  messages: any[];
+  messages: ChatMessage[];
   isReplying: boolean;
 }
 
 export default function ChatMessageList({ messages, isReplying }: ChatMessageListProps) {
-  const [previewSource, setPreviewSource] = useState<any>(null);
+  const [previewSource, setPreviewSource] = useState<Source | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const handleOpenSource = (source: any) => {
+  const handleOpenSource = (source: Source) => {
     if (!source?.url) return;
     setPreviewSource(source);
   };
@@ -35,12 +36,12 @@ export default function ChatMessageList({ messages, isReplying }: ChatMessageLis
         className="flex flex-col h-[90%] overflow-y-auto absolute top-0 left-0 right-0"
       >
         {messages.length > 0 ? (
-          messages.map((msg: any, index: number) => {
+          messages.map((msg, index) => {
             if (msg?.role === "human") {
-              return <HumanMessage key={`msg-${index}`} content={msg?.content} />;
+              return <HumanMessage key={`msg-${index}`} content={typeof msg.content === "string" ? msg.content : ""} />;
             }
 
-            return <AIMessage key={`msg-${index}`} content={msg?.content} onOpenSource={handleOpenSource} />;
+            return <AIMessage key={`msg-${index}`} content={Array.isArray(msg.content) ? msg.content : []} onOpenSource={handleOpenSource} />;
           })
         ) : (
           <div className="flex-1 flex flex-col justify-center items-center">

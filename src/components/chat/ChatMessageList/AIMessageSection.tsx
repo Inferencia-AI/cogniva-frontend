@@ -6,13 +6,7 @@ import PromotedAnswer from "./PromotedWebAnswer";
 import WikipediaAnswer from "./WikipediaAnswer";
 import DuckDuckGoAnswer from "./DuckDuckGoAnswer";
 import OtherWebResults from "./OtherWebResults";
-import type { AiSection } from "../../../types/chat";
-
-interface Source {
-  title?: string;
-  url?: string;
-  snippet?: string;
-}
+import type { AiSection, Source } from "../../../types/chat";
 
 interface AIMessageSectionProps {
   section: AiSection;

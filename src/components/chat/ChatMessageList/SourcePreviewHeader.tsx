@@ -1,12 +1,8 @@
 import { ArrowUpRight, X } from "lucide-react";
-
-interface PreviewSource {
-  title?: string;
-  url?: string;
-}
+import type { Source } from "../../../types/chat";
 
 interface SourcePreviewHeaderProps {
-  source: PreviewSource;
+  source: Source;
   onClose: () => void;
   onOpenNewTab: (url?: string) => void;
 }

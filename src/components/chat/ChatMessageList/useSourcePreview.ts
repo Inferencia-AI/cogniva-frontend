@@ -1,17 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../../../utils/api";
+import type { Source, PreviewBlock, ScrapUrlResponse } from "../../../types/chat";
 
-interface PreviewSource {
-  url?: string;
-}
-
-interface PreviewBlock {
-  blockType?: string;
-  description?: string;
-  content?: string;
-}
-
-export function useSourcePreview(source: PreviewSource | null) {
+export function useSourcePreview(source: Source | null) {
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);

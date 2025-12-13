@@ -1,7 +1,8 @@
 import type { FC } from "react";
+import type { UserData } from "../../types/chat";
 
 interface ChatHeaderProps {
-  user: any;
+  user: UserData | null;
   profileMenuOpen: boolean;
   onToggleProfileMenu: () => void;
   onSignOut: () => void;
@@ -11,10 +12,10 @@ export const ChatHeader: FC<ChatHeaderProps> = ({ user, profileMenuOpen, onToggl
   return (
     <div className="flex p-default items-center justify-between border-b border-accent shadow-md">
       <div className="flex items-center gap-default">
-        <img onClick={onToggleProfileMenu} src={user?.user.picture} className="rounded-full size-12" alt="User Avatar" />
+        <img onClick={onToggleProfileMenu} src={user?.user?.picture} className="rounded-full size-12 cursor-pointer" alt="User Avatar" />
         <div className="sm:block hidden">
-          <p className="text-default text-body">{user?.user.name}</p>
-          <p className="text-default text-caption">{user?.user.email}</p>
+          <p className="text-default text-body">{user?.user?.name}</p>
+          <p className="text-default text-caption">{user?.user?.email}</p>
         </div>
 
         <div

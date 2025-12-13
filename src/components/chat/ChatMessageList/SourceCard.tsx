@@ -1,10 +1,5 @@
 import { FileTextIcon } from "lucide-react";
-
-interface Source {
-  title?: string;
-  url?: string;
-  snippet?: string;
-}
+import type { Source } from "../../../types/chat";
 
 interface SourceCardProps {
   source: Source;

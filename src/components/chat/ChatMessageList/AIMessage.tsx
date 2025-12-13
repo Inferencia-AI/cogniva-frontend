@@ -1,11 +1,5 @@
 import AIMessageSection from "./AIMessageSection";
-import type { AiSection } from "../../../types/chat";
-
-interface Source {
-  title?: string;
-  url?: string;
-  snippet?: string;
-}
+import type { AiSection, Source } from "../../../types/chat";
 
 interface AIMessageProps {
   content: AiSection | AiSection[];
@@ -17,7 +11,7 @@ export default function AIMessage({ content, onOpenSource }: AIMessageProps) {
 
   return (
     <div className="flex flex-col gap-default mb-default">
-      {aiSections?.filter(Boolean)?.map((section: any, sectionIndex: number) => (
+      {aiSections?.filter(Boolean)?.map((section, sectionIndex) => (
         <AIMessageSection
           key={`section-${sectionIndex}`}
           section={section}

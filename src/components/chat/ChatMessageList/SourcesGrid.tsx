@@ -1,10 +1,5 @@
 import SourceCard from "./SourceCard";
-
-interface Source {
-  title?: string;
-  url?: string;
-  snippet?: string;
-}
+import type { Source } from "../../../types/chat";
 
 interface SourcesGridProps {
   sources?: Source[];

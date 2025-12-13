@@ -1,14 +1,10 @@
 import SourcePreviewHeader from "./SourcePreviewHeader";
 import SourcePreviewBody from "./SourcePreviewBody";
 import { useSourcePreview } from "./useSourcePreview";
-
-interface PreviewSource {
-  title?: string;
-  url?: string;
-}
+import type { Source } from "../../../types/chat";
 
 interface SourcePreviewProps {
-  source: PreviewSource | null;
+  source: Source | null;
   onClose: () => void;
 }
 

@@ -1,8 +1,9 @@
 import PreviewBlock from "./PreviewBlock";
+import type { PreviewBlock as PreviewBlockType } from "../../../types/chat";
 
 interface SourcePreviewBodyProps {
   isLoading: boolean;
-  blocks: any[];
+  blocks: PreviewBlockType[];
   error: string | null;
   html: string;
   sourceUrl?: string;
@@ -16,7 +17,7 @@ export default function SourcePreviewBody({ isLoading, blocks, error, html, sour
   if (blocks.length) {
     return (
       <div className="h-full w-full overflow-y-auto p-4 flex flex-col gap-4">
-        {blocks.map((block: any, idx: number) => (
+        {blocks.map((block, idx) => (
           <PreviewBlock key={idx} block={block} baseUrl={sourceUrl} />
         ))}
       </div>
