@@ -92,6 +92,7 @@ function HomeContent({
   const [input, setInput] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [showFeaturePopover, setShowFeaturePopover] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Event handlers
@@ -141,11 +142,23 @@ function HomeContent({
             <p className="text-default/30 text-caption text-center">Chats</p>
             </div>
           )}
-          <div className="flex items-center gap-4 bg-secondary/80 p-default rounded-md">
-            <HomeIcon className="text-primary size-6" />
-            <ShoppingBagIcon className="text-primary size-6" />
-            <ForkKnifeIcon className="text-primary size-6" />
-            <Code2Icon className="text-primary size-6" />
+            <div 
+              className="relative flex items-center gap-4 bg-secondary/80 p-default rounded-md cursor-pointer hover:bg-secondary/90 transition-colors"
+              onMouseEnter={() => setShowFeaturePopover(true)}
+              onMouseLeave={() => setShowFeaturePopover(false)}
+              onClick={() => setShowFeaturePopover(!showFeaturePopover)}
+            >
+              <HomeIcon className="text-primary size-6" />
+              <ShoppingBagIcon className="text-primary size-6" />
+              <ForkKnifeIcon className="text-primary size-6" />
+              <Code2Icon className="text-primary size-6" />
+              
+              {/* Popover */}
+              {showFeaturePopover && (
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                  These Features are 'coming soon' stay tuned!
+                </div>
+              )}
             </div>
             {notesSidebarOpen ? (
               <PanelRightCloseIcon onClick={toggleNotesSidebar} className="text-accent bg-secondary size-8 rounded-md cursor-pointer transition-all duration-200 hover:bg-secondary/80" />
