@@ -6,7 +6,9 @@ import { ChatHeader } from "../components/chat/ChatHeader";
 import { ChatSidebar } from "../components/chat/ChatSidebar";
 import { ChatComposer } from "../components/chat/ChatComposer";
 import ChatMessageList from "../components/chat/ChatMessageList";
-import { SidebarClose, SidebarOpenIcon } from "lucide-react";
+import { NotesProvider, useNotesContext } from "../context/NotesContext";
+import { NotesSidebar, NoteEditor, MobileNoteEditor, TextSelectionPopup } from "../components/notes";
+import { Code2Icon, ForkKnifeIcon, HomeIcon, ShoppingBagIcon, SidebarClose, SidebarOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react";
 
 // =============================================================================
 // Home Page - Main chat interface
@@ -26,8 +28,63 @@ export default function Home() {
     submitPrompt,
     startNewChat,
     selectChat,
+    deleteChat,
     setIsWebSearchMode,
   } = useChatSession();
+
+  return (
+    <NotesProvider userId={user?.user?.uid}>
+      <HomeContent
+        user={user}
+        messages={messages}
+        chats={chats}
+        isProcessingUrl={isProcessingUrl}
+        isWebSearchMode={isWebSearchMode}
+        isReplying={isReplying}
+        submitPrompt={submitPrompt}
+        startNewChat={startNewChat}
+        selectChat={selectChat}
+        deleteChat={deleteChat}
+        setIsWebSearchMode={setIsWebSearchMode}
+      />
+    </NotesProvider>
+  );
+}
+
+// =============================================================================
+// HomeContent - Inner component with access to notes context
+// =============================================================================
+
+interface HomeContentProps {
+  user: ReturnType<typeof useChatSession>["user"];
+  messages: ReturnType<typeof useChatSession>["messages"];
+  chats: ReturnType<typeof useChatSession>["chats"];
+  isProcessingUrl: boolean;
+  isWebSearchMode: boolean;
+  isReplying: boolean;
+  submitPrompt: (prompt: string) => void;
+  startNewChat: () => void;
+  selectChat: (chat: ReturnType<typeof useChatSession>["chats"][number]) => void;
+  deleteChat: (chatId: number) => Promise<void>;
+  setIsWebSearchMode: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+function HomeContent({
+  user,
+  messages,
+  chats,
+  isProcessingUrl,
+  isWebSearchMode,
+  isReplying,
+  submitPrompt,
+  startNewChat,
+  selectChat,
+  deleteChat,
+  setIsWebSearchMode,
+}: HomeContentProps) {
+  const { notesSidebarOpen, setNotesSidebarOpen, noteEditorOpen } = useNotesContext();
+
+  const toggleNotesSidebar = () => setNotesSidebarOpen(!notesSidebarOpen);
 
   // ---------------------------------------------------------------------------
   // Local UI state
@@ -74,29 +131,56 @@ export default function Home() {
       />
 
       <div className="flex flex-col gap-default p-default h-full overflow-auto">
-        {/* Sidebar toggle button */}
-        <div onClick={toggleSidebar} className="cursor-pointer">
+        {/* Sidebar toggle button and navigation */}
+        <div className="flex justify-between">
           {sidebarOpen ? (
-            <SidebarClose className="text-accent bg-secondary size-8 rounded-md" />
+            <SidebarClose onClick={toggleSidebar} className="text-accent bg-secondary size-8 rounded-md cursor-pointer" />
           ) : (
-            <SidebarOpenIcon className="text-accent bg-secondary size-8 rounded-md" />
+            <div>
+            <SidebarOpenIcon onClick={toggleSidebar} className="text-accent bg-secondary size-8 rounded-md cursor-pointer" />
+            <p className="text-default/30 text-caption text-center">Chats</p>
+            </div>
           )}
+          <div className="flex items-center gap-4 bg-secondary/80 p-default rounded-md">
+            <HomeIcon className="text-primary size-6" />
+            <ShoppingBagIcon className="text-primary size-6" />
+            <ForkKnifeIcon className="text-primary size-6" />
+            <Code2Icon className="text-primary size-6" />
+            </div>
+            {notesSidebarOpen ? (
+              <PanelRightCloseIcon onClick={toggleNotesSidebar} className="text-accent bg-secondary size-8 rounded-md cursor-pointer transition-all duration-200 hover:bg-secondary/80" />
+            ) : (
+              // <button onClick={toggleNotesSidebar} className="text-accent bg-secondary/80 p-default rounded-md cursor-pointer flex items-center gap-2 hover:bg-secondary transition-all duration-200">
+              //   <StickyNoteIcon className="size-6 text-accent" />
+              //   <span className="hidden sm:inline">Notes</span>
+              //   <SidebarOpenIcon className="size-5 text-accent" />
+              // </button>
+              <div>
+              <PanelRightOpenIcon onClick={toggleNotesSidebar} className="text-accent bg-secondary size-8 rounded-md cursor-pointer transition-all duration-200 hover:bg-secondary/80" />
+              <p className="text-default/30 text-caption text-center">Notes</p>
+              </div>
+            )}
         </div>
 
         <div className="flex gap-default h-full overflow-hidden">
-          {/* Sidebar */}
+          {/* Chat Sidebar */}
           <ChatSidebar
             isOpen={sidebarOpen}
             chats={chats}
             onSelectChat={handleSelectChat}
             onNewChat={startNewChat}
+            onDeleteChat={deleteChat}
           />
 
           {/* Main content area */}
           <div
-            className={`transition-all duration-300 ${
-              sidebarOpen ? "sm:w-[calc(100%-16rem)] w-0" : "w-full"
-            } relative`}
+            className={`transition-all duration-300 relative ${
+              sidebarOpen && notesSidebarOpen
+                ? "sm:w-[calc(100%-32rem)] w-0"
+                : sidebarOpen || notesSidebarOpen
+                ? "sm:w-[calc(100%-16rem)] w-0"
+                : "w-full"
+            }`}
           >
             {messages.length > 0 ? (
               <ChatMessageList messages={messages} isReplying={isReplying} />
@@ -120,8 +204,19 @@ export default function Home() {
               onToggleWebSearch={() => setIsWebSearchMode((prev) => !prev)}
             />
           </div>
+
+          {/* Notes Sidebar */}
+          <NotesSidebar />
         </div>
       </div>
+
+      {/* Notes Components - Floating */}
+      <NoteEditor />
+      <MobileNoteEditor />
+      <TextSelectionPopup />
+
+      {/* Mobile: Add padding when note editor is open */}
+      {noteEditorOpen && <div className="sm:hidden h-[50vh]" />}
     </div>
   );
 }

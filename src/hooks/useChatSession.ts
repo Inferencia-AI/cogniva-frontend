@@ -103,6 +103,20 @@ export function useChatSession() {
     setMessages(chat.messages || []);
   }, []);
 
+  const deleteChat = useCallback(async (chatId: number) => {
+    try {
+      await api.delete(`/chats/${chatId}`);
+      setChats((prev) => prev.filter((chat) => chat.id !== chatId));
+      // If the deleted chat was selected, clear the messages
+      if (selectedChatId === chatId) {
+        setMessages([]);
+        setSelectedChatId(undefined);
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+    }
+  }, [selectedChatId]);
+
   // ---------------------------------------------------------------------------
   // Send a regular chat message
   // ---------------------------------------------------------------------------
@@ -427,6 +441,7 @@ Provide a concise 2-3 sentence summary of the relevant information only.`;
     submitPrompt,
     startNewChat,
     selectChat,
+    deleteChat,
     setIsWebSearchMode,
   };
 }

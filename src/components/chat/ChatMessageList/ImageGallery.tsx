@@ -4,6 +4,10 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+// =============================================================================
+// ImageGallery - Displays images in a carousel/swiper format
+// =============================================================================
+
 interface ImageGalleryProps {
   images: string[];
 }
@@ -44,3 +48,4 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     </div>
   );
 }
+
