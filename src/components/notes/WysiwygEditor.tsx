@@ -90,6 +90,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
   const handleInsertImage = (url: string) => {
     editor.chain().focus().setImage({ src: url }).run();
   };
+  
 
   return (
     <div className="flex items-center gap-0.5 p-2 border-t border-accent/50 bg-secondary/30 flex-wrap">

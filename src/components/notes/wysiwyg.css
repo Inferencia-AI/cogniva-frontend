@@ -173,6 +173,7 @@
   border: none;
 }
 
+
 .emoji-picker-wrapper em-emoji-picker .category-button {
   color: rgba(255, 255, 255, 0.6);
 }
@@ -180,3 +181,4 @@
 .emoji-picker-wrapper em-emoji-picker .category-button:hover {
   color: rgba(255, 255, 255, 1);
 }
+

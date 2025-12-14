@@ -119,52 +119,52 @@ export default function MediaPopover({
       {/* Popover */}
       <div ref={popoverRef} style={popoverStyle} className="z-50 animate-fade-in">
         {mode === "menu" && (
-          <div className="bg-secondary rounded-xl shadow-2xl border border-accent/30 overflow-hidden">
+          <div className="bg-primary rounded-xl shadow-2xl border border-secondary/50 overflow-hidden">
             <div className="flex items-center gap-1 p-2">
               <button
                 onClick={() => setMode("emoji")}
-                className="flex items-center gap-2 px-4 py-2.5 hover:bg-accent/20 rounded-lg transition-all duration-200 cursor-pointer group"
+                className="flex items-center gap-2 px-4 py-2.5 hover:bg-primary/50 rounded-lg transition-all duration-200 cursor-pointer group"
                 title="Insert Emoji"
               >
-                <SmileIcon className="size-5 text-yellow-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm text-default">Emoji</span>
+                <SmileIcon className="size-5 text-default group-hover:text-white group-hover:scale-110 transition-all" />
+                <span className="text-sm text-default group-hover:text-white">Emoji</span>
               </button>
 
-              <div className="w-px h-8 bg-accent/30" />
+              <div className="w-px h-8 bg-secondary/50" />
 
               <button
                 onClick={() => setMode("image")}
-                className="flex items-center gap-2 px-4 py-2.5 hover:bg-accent/20 rounded-lg transition-all duration-200 cursor-pointer group"
+                className="flex items-center gap-2 px-4 py-2.5 hover:bg-primary/50 rounded-lg transition-all duration-200 cursor-pointer group"
                 title="Insert Image"
               >
-                <ImageIcon className="size-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm text-default">Image</span>
+                <ImageIcon className="size-5 text-default group-hover:text-white group-hover:scale-110 transition-all" />
+                <span className="text-sm text-default group-hover:text-white">Image</span>
               </button>
             </div>
 
             {/* Arrow pointing down */}
             <div className="absolute left-1/2 -translate-x-1/2 top-full">
-              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-secondary" />
+              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-primary" />
             </div>
           </div>
         )}
 
         {mode === "emoji" && (
-          <div className="bg-secondary rounded-xl shadow-2xl border border-accent/30 overflow-hidden">
+          <div className="bg-primary rounded-xl shadow-2xl border border-secondary/50 overflow-hidden">
             {/* Header with back button */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-accent/20">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-secondary/30">
               <button
                 onClick={() => setMode("menu")}
-                className="text-xs text-accent hover:text-default transition-colors cursor-pointer"
+                className="text-xs text-default/70 hover:text-white transition-colors cursor-pointer"
               >
                 ← Back
               </button>
               <span className="text-xs text-default/60">Select Emoji</span>
               <button
                 onClick={onClose}
-                className="p-1 hover:bg-primary/50 rounded-md transition-colors cursor-pointer"
+                className="p-1 hover:bg-secondary/30 rounded-md transition-colors cursor-pointer"
               >
-                <XIcon className="size-4 text-default/50" />
+                <XIcon className="size-4 text-default/50 hover:text-white" />
               </button>
             </div>
 
@@ -188,28 +188,28 @@ export default function MediaPopover({
         )}
 
         {mode === "image" && (
-          <div className="bg-secondary rounded-xl shadow-2xl border border-accent/30 overflow-hidden min-w-[320px]">
+          <div className="bg-primary rounded-xl shadow-2xl border border-secondary/50 overflow-hidden min-w-[320px]">
             {/* Header with back button */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-accent/20">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-secondary/30">
               <button
                 onClick={() => setMode("menu")}
-                className="text-xs text-accent hover:text-default transition-colors cursor-pointer"
+                className="text-xs text-default/70 hover:text-white transition-colors cursor-pointer"
               >
                 ← Back
               </button>
               <span className="text-xs text-default/60">Insert Image URL</span>
               <button
                 onClick={onClose}
-                className="p-1 hover:bg-primary/50 rounded-md transition-colors cursor-pointer"
+                className="p-1 hover:bg-secondary/30 rounded-md transition-colors cursor-pointer"
               >
-                <XIcon className="size-4 text-default/50" />
+                <XIcon className="size-4 text-default/50 hover:text-white" />
               </button>
             </div>
 
             {/* Image URL Form */}
             <form onSubmit={handleImageSubmit} className="p-3">
-              <div className="flex items-center gap-2 bg-primary/50 rounded-lg border border-accent/30 px-3 py-2">
-                <LinkIcon className="size-4 text-accent/60" />
+              <div className="flex items-center gap-2 bg-secondary/60 rounded-lg border border-secondary/30 px-3 py-2 focus-within:border-secondary/60 transition-colors">
+                <LinkIcon className="size-4 text-default/50" />
                 <input
                   ref={inputRef}
                   type="url"
@@ -224,14 +224,14 @@ export default function MediaPopover({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3 py-1.5 text-xs text-default/70 hover:text-default transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-xs text-default/70 hover:text-white transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!imageUrl.trim()}
-                  className="px-4 py-1.5 text-xs bg-accent hover:bg-accent/80 text-secondary rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-1.5 text-xs bg-secondary hover:bg-secondary/80 text-white rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Insert
                 </button>
@@ -240,7 +240,7 @@ export default function MediaPopover({
 
             {/* Arrow pointing down */}
             <div className="absolute left-1/2 -translate-x-1/2 top-full">
-              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-secondary" />
+              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-primary" />
             </div>
           </div>
         )}
