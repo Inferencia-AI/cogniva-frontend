@@ -28,3 +28,4 @@ export { default as WikipediaAnswer } from "./WikipediaAnswer";
 export { default as DuckDuckGoAnswer } from "./DuckDuckGoAnswer";
 export { default as OtherWebResults } from "./OtherWebResults";
 export { default as ArticlesAnswer } from "./ArticlesAnswer";
+export { default as NotesAnswer } from "./NotesAnswer";

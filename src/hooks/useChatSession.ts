@@ -126,10 +126,38 @@ export function useChatSession() {
       setMessages(newMessages);
       setIsReplying(true);
 
+      const sections: AiSection[] = [];
+
       try {
-        const response = await api.post("/chat", { messages: newMessages, schema: [simpleChat, codeChat] });
+        // First, search user's notes (fast response)
+        if (user?.user?.uid) {
+          try {
+            const notesResponse = await api.post("/search-notes", {
+              userId: user.user.uid,
+              query: prompt,
+            });
+            
+            if (notesResponse.data?.notes?.length) {
+              sections.push(notesResponse.data as AiSection);
+              // Update messages immediately with notes
+              setMessages([...newMessages, { role: "ai", content: [...sections] }]);
+            }
+          } catch (notesError) {
+            console.error("Error searching notes:", notesError);
+            // Continue without notes
+          }
+        }
+
+        // Then, get LLM response
+        const response = await api.post("/chat", { 
+          messages: newMessages, 
+          schema: [simpleChat, codeChat],
+        });
         const aiPayload = (Array.isArray(response.data) ? response.data.flat() : [response.data]) as AiSection[];
-        const updatedMessages: ChatMessage[] = [...newMessages, { role: "ai", content: aiPayload }];
+        
+        // Combine notes (if any) with LLM response
+        const combinedPayload = [...sections, ...aiPayload];
+        const updatedMessages: ChatMessage[] = [...newMessages, { role: "ai", content: combinedPayload }];
         setMessages(updatedMessages);
         await saveChat(updatedMessages, selectedChatId);
       } catch (error) {
@@ -138,7 +166,7 @@ export function useChatSession() {
         setIsReplying(false);
       }
     },
-    [messages, selectedChatId, saveChat],
+    [messages, selectedChatId, saveChat, user],
   );
 
   // ---------------------------------------------------------------------------

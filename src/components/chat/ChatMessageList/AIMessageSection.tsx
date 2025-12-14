@@ -7,15 +7,21 @@ import WikipediaAnswer from "./WikipediaAnswer";
 import DuckDuckGoAnswer from "./DuckDuckGoAnswer";
 import OtherWebResults from "./OtherWebResults";
 import ArticlesAnswer from "./ArticlesAnswer";
+import NotesAnswer from "./NotesAnswer";
 import type { AiSection, Source } from "../../../types/chat";
 
 interface AIMessageSectionProps {
   section: AiSection;
   onOpenSource: (source: Source) => void;
+  onOpenNote?: (noteId: number) => void;
 }
 
-export default function AIMessageSection({ section, onOpenSource }: AIMessageSectionProps) {
+export default function AIMessageSection({ section, onOpenSource, onOpenNote }: AIMessageSectionProps) {
   const imageGallery = Array.isArray(section?.images) ? section.images.filter(Boolean) : [];
+
+  if (section?.type === "notes") {
+    return <NotesAnswer notes={section.notes} onOpenNote={onOpenNote} />;
+  }
 
   if (section?.type === "answer") {
     return (

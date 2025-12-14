@@ -4,9 +4,10 @@ import type { AiSection, Source } from "../../../types/chat";
 interface AIMessageProps {
   content: AiSection | AiSection[];
   onOpenSource: (source: Source) => void;
+  onOpenNote?: (noteId: number) => void;
 }
 
-export default function AIMessage({ content, onOpenSource }: AIMessageProps) {
+export default function AIMessage({ content, onOpenSource, onOpenNote }: AIMessageProps) {
   const aiSections = Array.isArray(content) ? content : [content];
 
   return (
@@ -16,6 +17,7 @@ export default function AIMessage({ content, onOpenSource }: AIMessageProps) {
           key={`section-${sectionIndex}`}
           section={section}
           onOpenSource={onOpenSource}
+          onOpenNote={onOpenNote}
         />
       ))}
     </div>
