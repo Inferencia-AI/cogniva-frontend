@@ -127,6 +127,7 @@ export function useChatSession() {
       setIsReplying(true);
 
       const sections: AiSection[] = [];
+      let retrievedNotes: any[] = [];
 
       try {
         // First, search user's notes (fast response)
@@ -138,24 +139,66 @@ export function useChatSession() {
             });
             
             if (notesResponse.data?.notes?.length) {
+              retrievedNotes = notesResponse.data.notes;
               sections.push(notesResponse.data as AiSection);
               // Update messages immediately with notes
               setMessages([...newMessages, { role: "ai", content: [...sections] }]);
             }
+
           } catch (notesError) {
             console.error("Error searching notes:", notesError);
             // Continue without notes
           }
         }
 
-        // Then, get LLM response
+        // If notes were found, generate RAG-based response from notes
+        if (retrievedNotes.length > 0) {
+          try {
+            // Construct context from retrieved notes
+            const notesContext = retrievedNotes
+              .map((note, index) => {
+                // Strip HTML tags from body for cleaner context
+                const cleanBody = note.body?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '';
+                return `Note ${index + 1} - "${note.title}":\n${cleanBody.slice(0, 2000)}`;
+              })
+              .join('\n\n---\n\n');
+
+            const ragPrompt = `Based on the following notes from the user's knowledge base, provide a comprehensive answer to their question: "${prompt}"
+
+${notesContext}
+
+Please synthesize the information from these notes to directly answer the user's question. If the notes don't fully answer the question, focus on what relevant information they do provide.`;
+
+            const ragMessages: ChatMessage[] = [{ role: "human", content: ragPrompt }];
+            const ragResponse = await api.post("/chat", {
+              messages: ragMessages,
+              schema: [simpleChat, codeChat],
+            });
+
+            const ragPayload = (Array.isArray(ragResponse.data) ? ragResponse.data.flat() : [ragResponse.data]) as AiSection[];
+            
+            // Mark RAG sections with a distinct topic
+            const ragSections = ragPayload.map((section) => ({
+              ...section,
+              topic: section.topic || "From Your Notes",
+            }));
+
+            sections.push(...ragSections);
+            setMessages([...newMessages, { role: "ai", content: [...sections] }]);
+          } catch (ragError) {
+            console.error("Error generating RAG response:", ragError);
+            // Continue to general LLM response
+          }
+        }
+
+        // Then, get general LLM response
         const response = await api.post("/chat", { 
           messages: newMessages, 
           schema: [simpleChat, codeChat],
         });
         const aiPayload = (Array.isArray(response.data) ? response.data.flat() : [response.data]) as AiSection[];
         
-        // Combine notes (if any) with LLM response
+        // Combine all sections: notes + RAG response + general LLM response
         const combinedPayload = [...sections, ...aiPayload];
         const updatedMessages: ChatMessage[] = [...newMessages, { role: "ai", content: combinedPayload }];
         setMessages(updatedMessages);
