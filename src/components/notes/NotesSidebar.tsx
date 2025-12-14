@@ -1,7 +1,8 @@
 import { useState, type FC } from "react";
-import { PlusIcon, TrashIcon } from "lucide-react";
+import { PlusIcon, TrashIcon, UploadIcon } from "lucide-react";
 import { useNotesContext } from "../../context/NotesContext";
 import { ConfirmDialog } from "../ui";
+import { DocumentUploadDialog } from "./DocumentUploadDialog";
 import type { Note } from "../../types/notes";
 
 // =============================================================================
@@ -16,11 +17,18 @@ export const NotesSidebar: FC = () => {
     setNotesSidebarOpen,
     openNoteEditor,
     deleteNote,
+    uploadDocument,
+    isUploading,
+    uploadProgress,
+    uploadError,
+    clearUploadError,
+    validateDocumentFile,
   } = useNotesContext();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const handleSelectNote = (note: Note) => {
     openNoteEditor(note);
@@ -50,6 +58,23 @@ export const NotesSidebar: FC = () => {
   const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
     setNoteToDelete(null);
+  };
+
+  const handleOpenUploadDialog = () => {
+    clearUploadError();
+    setUploadDialogOpen(true);
+  };
+
+  const handleCloseUploadDialog = () => {
+    setUploadDialogOpen(false);
+  };
+
+  const handleUploadDocument = async (file: File) => {
+    const result = await uploadDocument(file);
+    if (result) {
+      setUploadDialogOpen(false);
+      setNotesSidebarOpen(false);
+    }
   };
 
   return (
@@ -91,6 +116,13 @@ export const NotesSidebar: FC = () => {
           <p className="text-default/50">
             {notes.length} note{notes.length !== 1 ? "s" : ""}
           </p>
+          <button
+            onClick={handleOpenUploadDialog}
+            className="mt-2 flex items-center justify-center gap-2 w-full py-2 px-3 text-default/70 hover:text-default hover:bg-accent/20 rounded-md transition-all duration-200 cursor-pointer text-caption"
+          >
+            <UploadIcon className="size-4" />
+            Upload Document
+          </button>
         </div>
       </div>
 
@@ -105,6 +137,17 @@ export const NotesSidebar: FC = () => {
         cancelText="Cancel"
         confirmVariant="danger"
         isLoading={isDeleting}
+      />
+
+      {/* Document Upload Dialog */}
+      <DocumentUploadDialog
+        isOpen={uploadDialogOpen}
+        onClose={handleCloseUploadDialog}
+        onUpload={handleUploadDocument}
+        isUploading={isUploading}
+        uploadProgress={uploadProgress}
+        uploadError={uploadError}
+        validateFile={validateDocumentFile}
       />
     </>
   );

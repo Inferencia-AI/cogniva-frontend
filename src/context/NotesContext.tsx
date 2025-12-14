@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { useNotes } from "../hooks/useNotes";
+import { useDocumentUpload } from "../hooks/useDocumentUpload";
 import type { Note } from "../types/notes";
 
 // =============================================================================
@@ -34,6 +35,13 @@ interface NotesContextType {
   addTextToActiveNote: (text: string) => Promise<void>;
   addImageToActiveNote: (imageUrl: string) => Promise<void>;
   clearPendingContent: () => void;
+  // Document upload
+  uploadDocument: (file: File) => Promise<Note | null>;
+  isUploading: boolean;
+  uploadProgress: number;
+  uploadError: string | null;
+  clearUploadError: () => void;
+  validateDocumentFile: (file: File) => string | null;
 }
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined);
@@ -59,6 +67,27 @@ export function NotesProvider({ children, userId }: NotesProviderProps) {
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [noteEditorOpen, setNoteEditorOpen] = useState(false);
   const [pendingContent, setPendingContent] = useState<PendingContent | null>(null);
+
+  // Document upload - callbacks for after upload
+  const handleUploadSuccess = useCallback((note: Note) => {
+    // Add the new note to the list
+    fetchNotes();
+    // Open the note in editor
+    setActiveNote(note);
+    setNoteEditorOpen(true);
+  }, [fetchNotes]);
+
+  const {
+    uploadDocument,
+    isUploading,
+    uploadProgress,
+    uploadError,
+    clearError: clearUploadError,
+    validateFile: validateDocumentFile,
+  } = useDocumentUpload({
+    userId,
+    onSuccess: handleUploadSuccess,
+  });
 
   // Fetch notes when userId changes
   useEffect(() => {
@@ -158,6 +187,13 @@ export function NotesProvider({ children, userId }: NotesProviderProps) {
     addTextToActiveNote,
     addImageToActiveNote,
     clearPendingContent,
+    // Document upload
+    uploadDocument,
+    isUploading,
+    uploadProgress,
+    uploadError,
+    clearUploadError,
+    validateDocumentFile,
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
