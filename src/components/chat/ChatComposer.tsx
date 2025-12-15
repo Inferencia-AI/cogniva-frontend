@@ -40,7 +40,7 @@ export const ChatComposer: FC<ChatComposerProps> = ({
         <MessageCircleCodeIcon className="text-accent" />
         <input
           type="text"
-          className="flex-1 text-default outline-none"
+          className="flex-1 text-default outline-none w-full"
           placeholder={isWebSearchMode ? "Enter a web search query" : "Type your message..."}
           value={input}
           onChange={handleChange}
