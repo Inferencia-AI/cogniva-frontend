@@ -175,7 +175,7 @@ function HomeContent({
             )}
         </div>
 
-        <div className="flex gap-default h-full overflow-hidden">
+        <div className="flex gap-default h-full overflow-hidden relative">
           {/* Chat Sidebar */}
           <ChatSidebar
             isOpen={sidebarOpen}
@@ -189,11 +189,11 @@ function HomeContent({
           <div
             className={`transition-all duration-300 relative ${
               sidebarOpen && notesSidebarOpen
-                ? "sm:w-[calc(100%-32rem)] w-0"
+                ? "sm:w-[calc(100%-32rem)] w-full"
                 : sidebarOpen || notesSidebarOpen
-                ? "sm:w-[calc(100%-16rem)] w-0"
+                ? "sm:w-[calc(100%-16rem)] w-full"
                 : "w-full"
-            }`}
+            } ${(sidebarOpen || notesSidebarOpen) ? "max-sm:invisible max-sm:pointer-events-none" : ""}`}
           >
             {messages.length > 0 ? (
               <ChatMessageList messages={messages} isReplying={isReplying} />

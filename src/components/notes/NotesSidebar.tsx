@@ -1,5 +1,5 @@
-import { useState, type FC } from "react";
-import { PlusIcon, TrashIcon, UploadIcon } from "lucide-react";
+import { useState, useMemo, type FC } from "react";
+import { PlusIcon, TrashIcon, UploadIcon, SearchIcon } from "lucide-react";
 import { useNotesContext } from "../../context/NotesContext";
 import { ConfirmDialog } from "../ui";
 import { DocumentUploadDialog } from "./DocumentUploadDialog";
@@ -29,6 +29,16 @@ export const NotesSidebar: FC = () => {
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredNotes = useMemo(() => {
+    if (!searchQuery.trim()) return notes;
+    const query = searchQuery.toLowerCase();
+    return notes.filter((note) => {
+      const title = (note.title || "Untitled").toLowerCase();
+      return title.includes(query);
+    });
+  }, [notes, searchQuery]);
 
   const handleSelectNote = (note: Note) => {
     openNoteEditor(note);
@@ -79,17 +89,35 @@ export const NotesSidebar: FC = () => {
 
   return (
     <>
-      <div className={`transition-all duration-300 ${notesSidebarOpen ? "sm:w-64 w-full" : "w-0 overflow-hidden opacity-0"} h-full overflow-hidden`}>
+      <div
+        className={`transition-all duration-300 h-full overflow-hidden ${
+          notesSidebarOpen ? "sm:w-64 w-full" : "w-0 overflow-hidden opacity-0"
+        } ${
+          notesSidebarOpen
+            ? "max-sm:absolute max-sm:inset-y-0 max-sm:right-0 max-sm:left-auto max-sm:z-40 max-sm:w-full max-sm:h-full max-sm:bg-primary max-sm:p-default max-sm:translate-x-0"
+            : "max-sm:absolute max-sm:inset-y-0 max-sm:right-0 max-sm:left-auto max-sm:z-40 max-sm:w-full max-sm:h-full max-sm:opacity-0 max-sm:pointer-events-none max-sm:translate-x-full"
+        }`}
+      >
         <button className="button w-full text-default" onClick={handleCreateNote}>
           <PlusIcon className="size-4 inline mr-2" />
           New Note
         </button>
+        <div className="relative mt-2">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-default/50" />
+          <input
+            type="text"
+            placeholder="Search notes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 bg-secondary/30 border border-accent/30 rounded-md text-default text-body placeholder:text-default/40 focus:outline-none focus:border-accent transition-colors"
+          />
+        </div>
         <hr className="border-accent my-default" />
-        <div className="overflow-y-auto overflow-x-hidden h-[80%] p-default flex flex-col gap-default bg-secondary/10 rounded-md scrollbar-thin" dir="rtl">
+        <div className="overflow-y-auto overflow-x-hidden h-[75%] p-default flex flex-col gap-default bg-secondary/10 rounded-md scrollbar-thin" dir="rtl">
           {isLoading ? (
             <p className="text-default/50 text-body p-default text-center">Loading notes...</p>
-          ) : notes.length > 0 ? (
-            notes.map((note) => (
+          ) : filteredNotes.length > 0 ? (
+            filteredNotes.map((note) => (
               <div key={note.id} className="button bg-secondary/20! p-small hover:bg-accent rounded-md cursor-pointer group" dir="ltr">
                 <div className="flex items-center justify-between">
                   <button 
@@ -108,7 +136,9 @@ export const NotesSidebar: FC = () => {
               </div>
             ))
           ) : (
-            <p className="text-default text-body p-default text-center">No notes yet.</p>
+            <p className="text-default text-body p-default text-center">
+              {searchQuery ? "No notes found." : "No notes yet."}
+            </p>
           )}
         </div>
         <hr className="border-accent my-default" />
