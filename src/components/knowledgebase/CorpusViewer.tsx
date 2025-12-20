@@ -13,6 +13,7 @@ import {
   Share2,
 } from "lucide-react";
 import type { CorpusComment } from "../../types/corpus";
+import { GlobalDialog } from "../ui/GlobalDialog";
 
 // =============================================================================
 // Corpus Viewer Component - Full-screen Medium-style reading experience
@@ -36,6 +37,7 @@ export const CorpusViewer: FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Handle scroll for sticky header effect
   useEffect(() => {
@@ -102,7 +104,7 @@ export const CorpusViewer: FC = () => {
   const handleSaveToNotes = async () => {
     const note = await saveCorpusToNotes(viewedCorpus.id);
     if (note) {
-      alert("Corpus saved to your personal notes!");
+      setSuccessMessage("Corpus saved to your personal notes!");
     }
   };
 
@@ -120,7 +122,7 @@ export const CorpusViewer: FC = () => {
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      setSuccessMessage("Link copied to clipboard!");
     }
   };
 
@@ -411,6 +413,28 @@ export const CorpusViewer: FC = () => {
           onClick={() => setShowComments(false)}
         />
       )}
+
+      {/* Success Dialog */}
+      <GlobalDialog
+        isOpen={!!successMessage}
+        onClose={() => setSuccessMessage(null)}
+        title="Success"
+        initialWidth={380}
+        initialHeight={150}
+        resizable={false}
+        footer={
+          <div className="flex justify-end">
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80 transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        }
+      >
+        <p className="text-default text-body">{successMessage}</p>
+      </GlobalDialog>
     </div>
   );
 };

@@ -158,7 +158,7 @@ export const GlobalDialog: FC<GlobalDialogProps> = ({
       {/* Dialog */}
       <div
         ref={containerRef}
-        className={`fixed z-50 flex flex-col bg-primary rounded-md shadow-2xl border border-accent overflow-hidden ${
+        className={`fixed min-h-[200px] z-50 flex flex-col bg-primary rounded-md shadow-2xl border border-accent overflow-hidden ${
           shouldAnimate ? "transition-all duration-200 ease-out" : ""
         } ${isCentered ? "animate-zoom-in-95" : ""} ${className}`}
         style={{
