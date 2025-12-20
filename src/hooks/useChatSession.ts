@@ -128,46 +128,72 @@ export function useChatSession() {
 
       const sections: AiSection[] = [];
       let retrievedNotes: any[] = [];
+      let retrievedCorpus: any[] = [];
 
       try {
-        // First, search user's notes (fast response)
+        // Search user's notes and subscribed knowledgebases' corpus in parallel
         if (user?.user?.uid) {
-          try {
-            const notesResponse = await api.post("/search-notes", {
+          const [notesResult, corpusResult] = await Promise.allSettled([
+            // Search user's personal notes
+            api.post("/search-notes", {
               userId: user.user.uid,
               query: prompt,
-            });
-            
-            if (notesResponse.data?.notes?.length) {
-              retrievedNotes = notesResponse.data.notes;
-              sections.push(notesResponse.data as AiSection);
-              // Update messages immediately with notes
-              setMessages([...newMessages, { role: "ai", content: [...sections] }]);
-            }
+            }),
+            // Search corpus from subscribed knowledgebases
+            api.post("/corpus/query-subscribed", {
+              user_id: user.user.uid,
+              question: prompt,
+            }),
+          ]);
 
-          } catch (notesError) {
-            console.error("Error searching notes:", notesError);
-            // Continue without notes
+          // Process notes result
+          if (notesResult.status === "fulfilled" && notesResult.value.data?.notes?.length) {
+            retrievedNotes = notesResult.value.data.notes;
+            sections.push(notesResult.value.data as AiSection);
+          }
+
+          // Process corpus result
+          if (corpusResult.status === "fulfilled" && corpusResult.value.data?.corpus?.length) {
+            retrievedCorpus = corpusResult.value.data.corpus;
+            sections.push(corpusResult.value.data as AiSection);
+          }
+
+          // Update messages immediately with notes and corpus
+          if (sections.length > 0) {
+            setMessages([...newMessages, { role: "ai", content: [...sections] }]);
           }
         }
 
-        // If notes were found, generate RAG-based response from notes
-        if (retrievedNotes.length > 0) {
+        // Generate RAG-based response if we have context from notes or corpus
+        const hasContext = retrievedNotes.length > 0 || retrievedCorpus.length > 0;
+        
+        if (hasContext) {
           try {
             // Construct context from retrieved notes
             const notesContext = retrievedNotes
               .map((note, index) => {
-                // Strip HTML tags from body for cleaner context
                 const cleanBody = note.body?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '';
-                return `Note ${index + 1} - "${note.title}":\n${cleanBody.slice(0, 2000)}`;
+                return `Personal Note ${index + 1} - "${note.title}":\n${cleanBody.slice(0, 1500)}`;
               })
               .join('\n\n---\n\n');
 
-            const ragPrompt = `Based on the following notes from the user's knowledge base, provide a comprehensive answer to their question: "${prompt}"
+            // Construct context from retrieved corpus
+            const corpusContext = retrievedCorpus
+              .map((item, index) => {
+                const cleanBody = item.body?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '';
+                const keywords = item.keywords?.length ? `Keywords: ${item.keywords.join(', ')}` : '';
+                return `Knowledge Article ${index + 1} - "${item.title}" (from ${item.knowledgebaseName}):\n${keywords}\n${cleanBody.slice(0, 1500)}`;
+              })
+              .join('\n\n---\n\n');
 
-${notesContext}
+            // Combine both contexts
+            const combinedContext = [notesContext, corpusContext].filter(Boolean).join('\n\n==========\n\n');
 
-Please synthesize the information from these notes to directly answer the user's question. If the notes don't fully answer the question, focus on what relevant information they do provide.`;
+            const ragPrompt = `Based on the following knowledge sources, provide a comprehensive answer to the user's question: "${prompt}"
+
+${combinedContext}
+
+Please synthesize the information from these sources to directly answer the user's question. Prioritize information from the knowledge articles if relevant. If the sources don't fully answer the question, focus on what relevant information they do provide and indicate what aspects might need additional research.`;
 
             const ragMessages: ChatMessage[] = [{ role: "human", content: ragPrompt }];
             const ragResponse = await api.post("/chat", {
@@ -177,10 +203,16 @@ Please synthesize the information from these notes to directly answer the user's
 
             const ragPayload = (Array.isArray(ragResponse.data) ? ragResponse.data.flat() : [ragResponse.data]) as AiSection[];
             
-            // Mark RAG sections with a distinct topic
+            // Mark RAG sections with a distinct topic based on sources
+            const ragTopic = retrievedCorpus.length > 0 && retrievedNotes.length > 0
+              ? "From Your Knowledge Sources"
+              : retrievedCorpus.length > 0
+                ? "From Your Knowledgebases"
+                : "From Your Notes";
+
             const ragSections = ragPayload.map((section) => ({
               ...section,
-              topic: section.topic || "From Your Notes",
+              topic: section.topic || ragTopic,
             }));
 
             sections.push(...ragSections);
@@ -198,7 +230,7 @@ Please synthesize the information from these notes to directly answer the user's
         });
         const aiPayload = (Array.isArray(response.data) ? response.data.flat() : [response.data]) as AiSection[];
         
-        // Combine all sections: notes + RAG response + general LLM response
+        // Combine all sections: notes + corpus + RAG response + general LLM response
         const combinedPayload = [...sections, ...aiPayload];
         const updatedMessages: ChatMessage[] = [...newMessages, { role: "ai", content: combinedPayload }];
         setMessages(updatedMessages);

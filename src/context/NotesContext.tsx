@@ -22,6 +22,9 @@ interface NotesContextType {
   activeNote: Note | null;
   noteEditorOpen: boolean;
   pendingContent: PendingContent | null;
+  // Note Viewer State (for read-only viewing)
+  viewedNote: Note | null;
+  isNoteViewerOpen: boolean;
   fetchNotes: () => Promise<void>;
   createNote: (title: string, body?: string) => Promise<Note | null>;
   updateNote: (id: number, title: string, body: string) => Promise<Note | null>;
@@ -32,6 +35,8 @@ interface NotesContextType {
   setNoteEditorOpen: (open: boolean) => void;
   openNoteEditor: (note?: Note) => void;
   closeNoteEditor: () => void;
+  openNoteViewer: (note: Note) => void;
+  closeNoteViewer: () => void;
   addTextToActiveNote: (text: string) => Promise<void>;
   addImageToActiveNote: (imageUrl: string) => Promise<void>;
   clearPendingContent: () => void;
@@ -67,6 +72,10 @@ export function NotesProvider({ children, userId }: NotesProviderProps) {
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [noteEditorOpen, setNoteEditorOpen] = useState(false);
   const [pendingContent, setPendingContent] = useState<PendingContent | null>(null);
+  
+  // Note Viewer State (for read-only viewing)
+  const [viewedNote, setViewedNote] = useState<Note | null>(null);
+  const [isNoteViewerOpen, setIsNoteViewerOpen] = useState(false);
 
   // Document upload - callbacks for after upload
   const handleUploadSuccess = useCallback((note: Note) => {
@@ -130,6 +139,22 @@ export function NotesProvider({ children, userId }: NotesProviderProps) {
   };
 
   // ---------------------------------------------------------------------------
+  // Open note viewer (read-only view)
+  // ---------------------------------------------------------------------------
+  const openNoteViewer = useCallback((note: Note) => {
+    setViewedNote(note);
+    setIsNoteViewerOpen(true);
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Close note viewer
+  // ---------------------------------------------------------------------------
+  const closeNoteViewer = useCallback(() => {
+    setIsNoteViewerOpen(false);
+    setViewedNote(null);
+  }, []);
+
+  // ---------------------------------------------------------------------------
   // Add selected text to active note or create new note
   // ---------------------------------------------------------------------------
   const addTextToActiveNote = async (text: string) => {
@@ -174,6 +199,9 @@ export function NotesProvider({ children, userId }: NotesProviderProps) {
     activeNote,
     noteEditorOpen,
     pendingContent,
+    // Note Viewer State
+    viewedNote,
+    isNoteViewerOpen,
     fetchNotes,
     createNote,
     updateNote,
@@ -184,6 +212,8 @@ export function NotesProvider({ children, userId }: NotesProviderProps) {
     setNoteEditorOpen,
     openNoteEditor,
     closeNoteEditor,
+    openNoteViewer,
+    closeNoteViewer,
     addTextToActiveNote,
     addImageToActiveNote,
     clearPendingContent,

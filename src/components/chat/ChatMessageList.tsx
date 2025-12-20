@@ -4,6 +4,7 @@ import HumanMessage from "./ChatMessageList/HumanMessage";
 import AIMessage from "./ChatMessageList/AIMessage";
 import SourcePreview from "./ChatMessageList/SourcePreview";
 import { useNotesContext } from "../../context/NotesContext";
+import { useKnowledgebaseContext } from "../../context/KnowledgebaseContext";
 import type { ChatMessage, Source } from "../../types/chat";
 
 interface ChatMessageListProps {
@@ -15,6 +16,7 @@ export default function ChatMessageList({ messages, isReplying }: ChatMessageLis
   const [previewSource, setPreviewSource] = useState<Source | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const { notes, openNoteEditor } = useNotesContext();
+  const { fetchCorpus, openCorpusViewer } = useKnowledgebaseContext();
 
   const handleOpenSource = (source: Source) => {
     if (!source?.url) return;
@@ -31,6 +33,13 @@ export default function ChatMessageList({ messages, isReplying }: ChatMessageLis
       openNoteEditor(note);
     }
   }, [notes, openNoteEditor]);
+
+  const handleOpenCorpus = useCallback(async (corpusId: number) => {
+    const corpus = await fetchCorpus(corpusId);
+    if (corpus) {
+      openCorpusViewer(corpus);
+    }
+  }, [fetchCorpus, openCorpusViewer]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -50,7 +59,15 @@ export default function ChatMessageList({ messages, isReplying }: ChatMessageLis
               return <HumanMessage key={`msg-${index}`} content={typeof msg.content === "string" ? msg.content : ""} />;
             }
 
-            return <AIMessage key={`msg-${index}`} content={Array.isArray(msg.content) ? msg.content : []} onOpenSource={handleOpenSource} onOpenNote={handleOpenNote} />;
+            return (
+              <AIMessage 
+                key={`msg-${index}`} 
+                content={Array.isArray(msg.content) ? msg.content : []} 
+                onOpenSource={handleOpenSource} 
+                onOpenNote={handleOpenNote}
+                onOpenCorpus={handleOpenCorpus}
+              />
+            );
           })
         ) : (
           <div className="flex-1 flex flex-col justify-center items-center">

@@ -8,19 +8,25 @@ import DuckDuckGoAnswer from "./DuckDuckGoAnswer";
 import OtherWebResults from "./OtherWebResults";
 import ArticlesAnswer from "./ArticlesAnswer";
 import NotesAnswer from "./NotesAnswer";
+import CorpusAnswer from "./CorpusAnswer";
 import type { AiSection, Source } from "../../../types/chat";
 
 interface AIMessageSectionProps {
   section: AiSection;
   onOpenSource: (source: Source) => void;
   onOpenNote?: (noteId: number) => void;
+  onOpenCorpus?: (corpusId: number) => void;
 }
 
-export default function AIMessageSection({ section, onOpenSource, onOpenNote }: AIMessageSectionProps) {
+export default function AIMessageSection({ section, onOpenSource, onOpenNote, onOpenCorpus }: AIMessageSectionProps) {
   const imageGallery = Array.isArray(section?.images) ? section.images.filter(Boolean) : [];
 
   if (section?.type === "notes") {
     return <NotesAnswer notes={section.notes} onOpenNote={onOpenNote} />;
+  }
+
+  if (section?.type === "corpus") {
+    return <CorpusAnswer corpus={section.corpus} onOpenCorpus={onOpenCorpus} />;
   }
 
   if (section?.type === "answer") {
