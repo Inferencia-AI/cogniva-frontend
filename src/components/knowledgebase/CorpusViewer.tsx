@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, type FC } from "react";
 import { useKnowledgebaseContext } from "../../context/KnowledgebaseContext";
+import { useSnackbar } from "../ui/GlobalSnackbar";
 import {
   Heart,
   MessageSquare,
@@ -106,6 +107,8 @@ export const CorpusViewer: FC = () => {
     saveCorpusToNotes,
   } = useKnowledgebaseContext();
 
+  const { showSnackbar } = useSnackbar();
+
   // ---------------------------------------------------------------------------
   // Local State - For instant UI updates
   // ---------------------------------------------------------------------------
@@ -120,7 +123,7 @@ export const CorpusViewer: FC = () => {
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Loading States
@@ -215,7 +218,7 @@ export const CorpusViewer: FC = () => {
         : await likeCorpus(localCorpus.id);
       
       if (success) {
-        setSuccessMessage(wasLiked ? "Removed like!" : "Liked!");
+        showSnackbar(wasLiked ? "Removed like" : "Liked!", "success");
       } else {
         // Revert on failure
         setIsLiked(wasLiked);
@@ -224,6 +227,7 @@ export const CorpusViewer: FC = () => {
             ? [...prev, userId]
             : prev.filter(id => id !== userId)
         );
+        showSnackbar("Failed to update like", "error");
       }
     } catch {
       // Revert on error
@@ -233,10 +237,11 @@ export const CorpusViewer: FC = () => {
           ? [...prev, userId]
           : prev.filter(id => id !== userId)
       );
+      showSnackbar("Something went wrong", "error");
     } finally {
       setIsLiking(false);
     }
-  }, [localCorpus, isLiked, getCurrentUserId, likeCorpus, unlikeCorpus]);
+  }, [localCorpus, isLiked, getCurrentUserId, likeCorpus, unlikeCorpus, showSnackbar]);
 
   const handleAddComment = useCallback(async () => {
     if (!newComment.trim() || !localCorpus) return;
@@ -259,20 +264,22 @@ export const CorpusViewer: FC = () => {
     try {
       const success = await addComment(localCorpus.id, savedComment);
       if (success) {
-        setSuccessMessage("Comment added!");
+        showSnackbar("Comment added!", "success");
       } else {
         // Revert on failure
         setLocalComments(prev => prev.filter(c => c !== newCommentObj));
         setNewComment(savedComment);
+        showSnackbar("Failed to add comment", "error");
       }
     } catch {
       // Revert on error
       setLocalComments(prev => prev.filter(c => c !== newCommentObj));
       setNewComment(savedComment);
+      showSnackbar("Something went wrong", "error");
     } finally {
       setIsCommenting(false);
     }
-  }, [newComment, localCorpus, getCurrentUserId, addComment]);
+  }, [newComment, localCorpus, getCurrentUserId, addComment, showSnackbar]);
 
   const handleDeleteComment = useCallback(async (commentCreatedAt: string) => {
     if (!localCorpus) return;
@@ -289,18 +296,20 @@ export const CorpusViewer: FC = () => {
     try {
       const success = await deleteComment(localCorpus.id, commentCreatedAt);
       if (success) {
-        setSuccessMessage("Comment deleted!");
+        showSnackbar("Comment deleted", "success");
       } else {
         // Revert on failure
         setLocalComments(prev => [...prev, commentToDelete]);
+        showSnackbar("Failed to delete comment", "error");
       }
     } catch {
       // Revert on error
       setLocalComments(prev => [...prev, commentToDelete]);
+      showSnackbar("Something went wrong", "error");
     } finally {
       setIsDeletingComment(false);
     }
-  }, [localCorpus, localComments, deleteComment]);
+  }, [localCorpus, localComments, deleteComment, showSnackbar]);
 
   const handleSaveToNotes = useCallback(async () => {
     if (!localCorpus) return;
@@ -309,12 +318,16 @@ export const CorpusViewer: FC = () => {
     try {
       const note = await saveCorpusToNotes(localCorpus.id);
       if (note) {
-        setSuccessMessage("Saved to your notes!");
+        setShowSaveDialog(true);
+      } else {
+        showSnackbar("Failed to save to notes", "error");
       }
+    } catch {
+      showSnackbar("Something went wrong", "error");
     } finally {
       setIsSaving(false);
     }
-  }, [localCorpus, saveCorpusToNotes]);
+  }, [localCorpus, saveCorpusToNotes, showSnackbar]);
 
   const handleShare = useCallback(async () => {
     if (!localCorpus) return;
@@ -331,12 +344,12 @@ export const CorpusViewer: FC = () => {
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      setSuccessMessage("Link copied!");
+      showSnackbar("Link copied to clipboard", "success");
     }
-  }, [localCorpus]);
+  }, [localCorpus, showSnackbar]);
 
   const handleCloseDialog = useCallback(() => {
-    setSuccessMessage(null);
+    setShowSaveDialog(false);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -434,13 +447,13 @@ export const CorpusViewer: FC = () => {
         />
       )}
 
-      {/* ===== Success Dialog ===== */}
+      {/* ===== Save to Notes Dialog ===== */}
       <GlobalDialog
-        isOpen={!!successMessage}
+        isOpen={showSaveDialog}
         onClose={handleCloseDialog}
-        title="Success"
+        title="Saved to Notes!"
         initialWidth={320}
-        initialHeight={140}
+        initialHeight={160}
         resizable={false}
         footer={
           <div className="flex justify-end">
@@ -450,7 +463,7 @@ export const CorpusViewer: FC = () => {
           </div>
         }
       >
-        <p className="text-default text-body">{successMessage}</p>
+        <p className="text-default text-body">This corpus has been saved to your notes. You can access it from your notes list.</p>
       </GlobalDialog>
     </div>
   );

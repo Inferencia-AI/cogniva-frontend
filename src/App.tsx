@@ -7,9 +7,11 @@ import KnowledgebaseHome from './pages/knowledgebase/home.tsx'
 import KnowledgebaseDetail from './pages/knowledgebase/detail.tsx'
 import KnowledgebaseForm from './pages/knowledgebase/create.tsx'
 import { AuthenticatedLayout } from './components/layout/AuthenticatedLayout.tsx'
+import { SnackbarProvider } from './components/ui/GlobalSnackbar.tsx'
 
 function App() {
   return (
+    <SnackbarProvider>
     <BrowserRouter>
     <Routes>
     <Route element={<Login />} path='/' />
@@ -22,6 +24,7 @@ function App() {
     <Route element={<AuthenticatedLayout><KnowledgebaseForm /></AuthenticatedLayout>} path='/knowledgebase/:id/edit' />
     </Routes>
     </BrowserRouter>
+    </SnackbarProvider>
   )
 }
 
