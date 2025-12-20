@@ -27,7 +27,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
           640: { slidesPerView: 2 },
           1024: { slidesPerView: 3 },
         }}
-        className="w-full rounded-lg overflow-hidden bg-secondary/10 border border-accent/20 h-48"
+        className="w-full rounded-md overflow-hidden bg-secondary/10 border border-accent/20 h-48"
       >
         {images.map((imgSrc: string, imgIndex: number) => (
           <SwiperSlide key={`img-${imgIndex}`} className="w-full h-full">

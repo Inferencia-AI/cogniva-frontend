@@ -182,7 +182,7 @@ export default function KnowledgebaseForm() {
         <div className="flex items-center gap-4 animate-fade-in">
           <button
             onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-secondary text-default transition-colors"
+            className="p-2 rounded-md hover:bg-secondary text-default transition-colors"
           >
             <ArrowLeft className="size-5" />
           </button>
@@ -194,7 +194,7 @@ export default function KnowledgebaseForm() {
         <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in-up animation-delay-100">
           {/* Error Message */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-md p-4 text-red-400">
               {error}
             </div>
           )}
@@ -278,7 +278,7 @@ export default function KnowledgebaseForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter knowledgebase name"
-              className="w-full px-4 py-3 bg-secondary rounded-lg text-default placeholder:text-default/40 focus:outline-none focus:ring-2 focus:ring-accent/50"
+              className="w-full px-4 py-3 bg-secondary rounded-md text-default placeholder:text-default/40 focus:outline-none focus:ring-2 focus:ring-accent/50"
               required
             />
           </div>
@@ -291,7 +291,7 @@ export default function KnowledgebaseForm() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter a description for your knowledgebase"
               rows={4}
-              className="w-full px-4 py-3 bg-secondary rounded-lg text-default placeholder:text-default/40 focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none"
+              className="w-full px-4 py-3 bg-secondary rounded-md text-default placeholder:text-default/40 focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none"
             />
           </div>
 
@@ -314,14 +314,14 @@ export default function KnowledgebaseForm() {
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 px-6 py-3 bg-secondary text-default rounded-lg hover:bg-secondary/80 transition-colors"
+              className="flex-1 px-6 py-3 bg-secondary text-default rounded-md hover:bg-secondary/80 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="flex-1 px-6 py-3 bg-secondary text-default rounded-lg font-medium hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-secondary text-default rounded-md font-medium hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {isSubmitting && <Loader2 className="size-5 animate-spin" />}
               {isEditMode ? "Save Changes" : "Create Knowledgebase"}

@@ -69,7 +69,7 @@ export default function KnowledgebaseHome() {
           <h1 className="text-xl font-bold text-default">Knowledgebase</h1>
           <button
             onClick={handleCreateNew}
-            className="flex items-center gap-2 px-4 py-2 bg-secondary text-default rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-secondary text-default rounded-md font-medium hover:bg-secondary/80 transition-colors"
           >
             <Plus className="size-4" />
             <span className="hidden sm:inline">Create New</span>
@@ -127,7 +127,7 @@ export default function KnowledgebaseHome() {
                       {searchResults.notes.map((note) => (
                         <div
                           key={note.id}
-                          className="bg-primary rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-accent/30 transition-all"
+                          className="bg-primary rounded-md p-3 cursor-pointer hover:ring-1 hover:ring-accent/30 transition-all"
                         >
                           <h4 className="font-medium text-default">{note.title || "Untitled"}</h4>
                           <p className="text-default/50 text-caption line-clamp-1 mt-1">
@@ -177,7 +177,7 @@ export default function KnowledgebaseHome() {
                     onClick={() => handleKnowledgebaseClick(kb.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
+                      <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center overflow-hidden">
                         {kb.image_url ? (
                           <img src={kb.image_url} alt={kb.name || ""} className="w-full h-full object-cover" />
                         ) : (
@@ -201,7 +201,7 @@ export default function KnowledgebaseHome() {
                       {kb.latest_notes.slice(0, 3).map((note) => (
                         <div
                           key={note.id}
-                          className="bg-primary rounded-lg p-3 cursor-pointer hover:ring-1 hover:ring-accent/20 transition-all"
+                          className="bg-primary rounded-md p-3 cursor-pointer hover:ring-1 hover:ring-accent/20 transition-all"
                         >
                           <h4 className="text-default text-body font-medium truncate">
                             {note.title || "Untitled"}
@@ -256,7 +256,7 @@ export default function KnowledgebaseHome() {
               </p>
               <button
                 onClick={handleCreateNew}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-default rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-default rounded-md font-medium hover:bg-secondary/80 transition-colors"
               >
                 <Plus className="size-5" />
                 Create Knowledgebase

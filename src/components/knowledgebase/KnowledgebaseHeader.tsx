@@ -49,7 +49,7 @@ export const KnowledgebaseHeader: FC<KnowledgebaseHeaderProps> = ({
         {/* Back button */}
         <button
           onClick={onBack}
-          className="absolute top-4 left-4 p-2 rounded-lg bg-primary/80 backdrop-blur text-default hover:bg-primary transition-colors"
+          className="absolute top-4 left-4 p-2 rounded-md bg-primary/80 backdrop-blur text-default hover:bg-primary transition-colors"
         >
           <ArrowLeft className="size-5" />
         </button>
@@ -59,14 +59,14 @@ export const KnowledgebaseHeader: FC<KnowledgebaseHeaderProps> = ({
           <div className="absolute top-4 right-4 flex gap-2">
             <button
               onClick={onEdit}
-              className="p-2 rounded-lg bg-primary/80 backdrop-blur text-default hover:bg-primary transition-colors"
+              className="p-2 rounded-md bg-primary/80 backdrop-blur text-default hover:bg-primary transition-colors"
               title="Edit knowledgebase"
             >
               <Settings className="size-5" />
             </button>
             <button
               onClick={onDelete}
-              className="p-2 rounded-lg bg-primary/80 backdrop-blur text-red-400 hover:bg-red-500/20 transition-colors"
+              className="p-2 rounded-md bg-primary/80 backdrop-blur text-red-400 hover:bg-red-500/20 transition-colors"
               title="Delete knowledgebase"
             >
               <Trash2 className="size-5" />
@@ -121,7 +121,7 @@ export const KnowledgebaseHeader: FC<KnowledgebaseHeaderProps> = ({
               <button
                 onClick={onUnsubscribe}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary text-default rounded-lg hover:bg-secondary/80 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-default rounded-md hover:bg-secondary/80 disabled:opacity-50 transition-colors"
               >
                 <BellOff className="size-4" />
                 <span>Unsubscribe</span>
@@ -130,7 +130,7 @@ export const KnowledgebaseHeader: FC<KnowledgebaseHeaderProps> = ({
               <button
                 onClick={onSubscribe}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary text-default rounded-lg hover:bg-secondary/80 disabled:opacity-50 transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-default rounded-md hover:bg-secondary/80 disabled:opacity-50 transition-colors font-medium"
               >
                 <Bell className="size-4" />
                 <span>Subscribe</span>

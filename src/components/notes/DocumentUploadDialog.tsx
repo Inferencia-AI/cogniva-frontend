@@ -217,7 +217,7 @@ export const DocumentUploadDialog: FC<DocumentUploadDialogProps> = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer transition-all duration-200 ${
+          className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-md p-6 cursor-pointer transition-all duration-200 ${
             isDragOver
               ? "border-accent bg-accent/10"
               : selectedFile
@@ -294,7 +294,7 @@ export const DocumentUploadDialog: FC<DocumentUploadDialogProps> = ({
 
         {/* Success Message */}
         {status === "success" && (
-          <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-md">
             <CheckCircleIcon className="size-5 text-green-500 shrink-0" />
             <p className="text-caption text-green-600">
               Document uploaded and converted to note successfully!
@@ -304,7 +304,7 @@ export const DocumentUploadDialog: FC<DocumentUploadDialogProps> = ({
 
         {/* Error Message */}
         {currentError && status !== "success" && (
-          <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-md">
             <AlertCircleIcon className="size-5 text-red-500 shrink-0" />
             <p className="text-caption text-red-600">{currentError}</p>
           </div>

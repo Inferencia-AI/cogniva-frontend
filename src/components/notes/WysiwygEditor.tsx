@@ -197,7 +197,7 @@ export const WysiwygEditor = forwardRef<WysiwygEditorRef, WysiwygEditorProps>(
           },
           codeBlock: {
             HTMLAttributes: {
-              class: "bg-secondary/50 rounded-lg p-3 font-mono text-sm",
+              class: "bg-secondary/50 rounded-md p-3 font-mono text-sm",
             },
           },
           blockquote: {
@@ -212,7 +212,7 @@ export const WysiwygEditor = forwardRef<WysiwygEditorRef, WysiwygEditorProps>(
         }),
         Image.configure({
           HTMLAttributes: {
-            class: "rounded-lg max-w-full h-auto my-2",
+            class: "rounded-md max-w-full h-auto my-2",
           },
           allowBase64: true,
         }),

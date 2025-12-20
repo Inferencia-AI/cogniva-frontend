@@ -286,7 +286,7 @@ export const CorpusViewer: FC = () => {
               prose-blockquote:border-l-accent prose-blockquote:bg-primary/50 prose-blockquote:pl-4 prose-blockquote:py-2
               prose-ul:text-default/80 prose-ol:text-default/80
               prose-li:marker:text-accent
-              prose-img:rounded-lg prose-img:shadow-lg
+              prose-img:rounded-md prose-img:shadow-lg
             "
             dangerouslySetInnerHTML={{ __html: viewedCorpus.body || "" }}
           />
@@ -352,7 +352,7 @@ export const CorpusViewer: FC = () => {
             </h3>
             <button
               onClick={() => setShowComments(false)}
-              className="p-2 text-default/40 hover:text-default hover:bg-primary rounded-lg transition-colors"
+              className="p-2 text-default/40 hover:text-default hover:bg-primary rounded-md transition-colors"
             >
               <X className="size-5" />
             </button>
@@ -384,7 +384,7 @@ export const CorpusViewer: FC = () => {
                   setNewComment(e.target.value)
                 }
                 placeholder="Write a comment..."
-                className="flex-1 min-h-20 p-3 bg-primary text-default rounded-lg resize-none border border-default/10 focus:border-accent focus:outline-none text-sm"
+                className="flex-1 min-h-20 p-3 bg-primary text-default rounded-md resize-none border border-default/10 focus:border-accent focus:outline-none text-sm"
                 onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                   if (e.key === "Enter" && e.metaKey) {
                     handleAddComment();
@@ -395,7 +395,7 @@ export const CorpusViewer: FC = () => {
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim() || isSubmitting}
-              className="mt-2 w-full py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="mt-2 w-full py-2.5 bg-accent text-white rounded-md text-sm font-medium hover:bg-accent/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <Send className="size-4" />
               Post Comment

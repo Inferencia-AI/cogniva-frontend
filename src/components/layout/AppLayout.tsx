@@ -133,7 +133,7 @@ export const AppLayout: FC<AppLayoutProps> = ({ children }) => {
             >
               <ShoppingBagIcon className="text-primary/50 size-6" />
               {hoveredIcon === "shopping" && (
-                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-md p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
                   Coming soon!
                 </div>
               )}
@@ -146,7 +146,7 @@ export const AppLayout: FC<AppLayoutProps> = ({ children }) => {
             >
               <ForkKnifeIcon className="text-primary/50 size-6" />
               {hoveredIcon === "food" && (
-                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-md p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
                   Coming soon!
                 </div>
               )}
@@ -159,7 +159,7 @@ export const AppLayout: FC<AppLayoutProps> = ({ children }) => {
             >
               <Code2Icon className="text-primary/50 size-6" />
               {hoveredIcon === "code" && (
-                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-md p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
                   Coming soon!
                 </div>
               )}

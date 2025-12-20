@@ -142,7 +142,7 @@ export const NoteViewer: FC<NoteViewerProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`hidden sm:flex fixed z-40 flex-col bg-primary rounded-lg shadow-2xl border border-accent/50 overflow-hidden animate-fade-in ${
+      className={`hidden sm:flex fixed z-40 flex-col bg-primary rounded-md shadow-2xl border border-accent/50 overflow-hidden animate-fade-in ${
         shouldAnimate ? "transition-all duration-200 ease-out" : ""
       } ${isMaximized ? "rounded-none" : ""}`}
       style={

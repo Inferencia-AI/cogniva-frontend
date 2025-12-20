@@ -58,7 +58,7 @@ export const KnowledgebaseSearchBar: FC<KnowledgebaseSearchBarProps> = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full pl-10 pr-10 py-3 bg-secondary rounded-lg text-default placeholder:text-default/40 focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+            className="w-full pl-10 pr-10 py-2 bg-secondary rounded-md text-default placeholder:text-default/40 focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
           />
           {query && (
             <button
@@ -73,11 +73,11 @@ export const KnowledgebaseSearchBar: FC<KnowledgebaseSearchBarProps> = ({
         {/* Filter Button */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`p-3 rounded-lg transition-colors ${
+          className={`p-3 rounded-md transition-colors ${
             showFilters ? "bg-accent text-primary" : "bg-secondary text-default/60 hover:text-default"
           }`}
         >
-          <Filter className="size-5" />
+          <Filter className="size-4" />
         </button>
 
         {/* Search Button */}

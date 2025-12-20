@@ -123,7 +123,7 @@ export default function MediaPopover({
             <div className="flex items-center gap-1 p-2">
               <button
                 onClick={() => setMode("emoji")}
-                className="flex items-center gap-2 px-4 py-2.5 hover:bg-primary/50 rounded-lg transition-all duration-200 cursor-pointer group"
+                className="flex items-center gap-2 px-4 py-2.5 hover:bg-primary/50 rounded-md transition-all duration-200 cursor-pointer group"
                 title="Insert Emoji"
               >
                 <SmileIcon className="size-5 text-default group-hover:text-white group-hover:scale-110 transition-all" />
@@ -134,7 +134,7 @@ export default function MediaPopover({
 
               <button
                 onClick={() => setMode("image")}
-                className="flex items-center gap-2 px-4 py-2.5 hover:bg-primary/50 rounded-lg transition-all duration-200 cursor-pointer group"
+                className="flex items-center gap-2 px-4 py-2.5 hover:bg-primary/50 rounded-md transition-all duration-200 cursor-pointer group"
                 title="Insert Image"
               >
                 <ImageIcon className="size-5 text-default group-hover:text-white group-hover:scale-110 transition-all" />
@@ -208,7 +208,7 @@ export default function MediaPopover({
 
             {/* Image URL Form */}
             <form onSubmit={handleImageSubmit} className="p-3">
-              <div className="flex items-center gap-2 bg-secondary/60 rounded-lg border border-secondary/30 px-3 py-2 focus-within:border-secondary/60 transition-colors">
+              <div className="flex items-center gap-2 bg-secondary/60 rounded-md border border-secondary/30 px-3 py-2 focus-within:border-secondary/60 transition-colors">
                 <LinkIcon className="size-4 text-default/50" />
                 <input
                   ref={inputRef}
@@ -231,7 +231,7 @@ export default function MediaPopover({
                 <button
                   type="submit"
                   disabled={!imageUrl.trim()}
-                  className="px-4 py-1.5 text-xs bg-secondary hover:bg-secondary/80 text-white rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-1.5 text-xs bg-secondary hover:bg-secondary/80 text-white rounded-md transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Insert
                 </button>

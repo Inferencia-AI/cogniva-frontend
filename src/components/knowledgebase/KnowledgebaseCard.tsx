@@ -40,7 +40,7 @@ export const KnowledgebaseCard: FC<KnowledgebaseCardProps> = ({
         
         {/* Image overlay */}
         <div className="absolute -bottom-6 left-4">
-          <div className="w-14 h-14 rounded-lg bg-primary border-2 border-secondary overflow-hidden flex items-center justify-center">
+          <div className="w-14 h-14 rounded-md bg-primary border-2 border-secondary overflow-hidden flex items-center justify-center">
             {knowledgebase.image_url ? (
               <img
                 src={knowledgebase.image_url}

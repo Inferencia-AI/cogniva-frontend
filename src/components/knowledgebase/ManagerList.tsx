@@ -52,7 +52,7 @@ export const ManagerList: FC<ManagerListProps> = ({
   const roles: ManagerRole[] = ["admin", "editor", "approver", "viewer"];
 
   return (
-    <div className="bg-secondary/20 rounded-lg p-4">
+    <div className="bg-secondary/20 rounded-md p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-default">Managers</h3>
         {isAdmin && (
@@ -68,7 +68,7 @@ export const ManagerList: FC<ManagerListProps> = ({
 
       {/* Add Manager Form */}
       {showAddForm && isAdmin && (
-        <div className="mb-4 p-3 bg-primary rounded-lg">
+        <div className="mb-4 p-3 bg-primary rounded-md">
           <div className="flex gap-2 mb-2">
             <input
               type="text"
@@ -117,7 +117,7 @@ export const ManagerList: FC<ManagerListProps> = ({
           managers.map((manager) => (
             <div
               key={manager.userId}
-              className="flex items-center justify-between gap-2 p-3 bg-secondary/20 rounded-lg"
+              className="flex items-center justify-between gap-2 p-3 bg-secondary/20 rounded-md"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">

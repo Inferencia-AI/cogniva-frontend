@@ -139,7 +139,7 @@ export default function Register() {
 						</div>
 
 						{error ? (
-							<div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+							<div className="rounded-md border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-200">
 								{error}
 							</div>
 						) : null}
@@ -155,7 +155,7 @@ export default function Register() {
 									placeholder="you@company.com"
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
-									className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
+									className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
 									required
 									autoComplete="email"
 								/>
@@ -171,7 +171,7 @@ export default function Register() {
 									placeholder="••••••••"
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
-									className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
+									className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
 									required
 									autoComplete="new-password"
 								/>
@@ -187,7 +187,7 @@ export default function Register() {
 									placeholder="••••••••"
 									value={confirmPassword}
 									onChange={(e) => setConfirmPassword(e.target.value)}
-									className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
+									className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
 									required
 									autoComplete="new-password"
 								/>
@@ -197,7 +197,7 @@ export default function Register() {
 								<span className="text-sm text-[var(--text-color-default)]">Profile picture</span>
 								<label
 									htmlFor="avatar"
-									className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[var(--color-secondary)]/60 bg-[var(--color-primary)]/30 px-4 py-3 text-sm text-white transition hover:border-[var(--color-secondary)] hover:bg-[var(--color-accent)]/40"
+									className="flex cursor-pointer items-center justify-between rounded-md border border-dashed border-[var(--color-secondary)]/60 bg-[var(--color-primary)]/30 px-4 py-3 text-sm text-white transition hover:border-[var(--color-secondary)] hover:bg-[var(--color-accent)]/40"
 								>
 									<div className="flex items-center gap-3">
 										<div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/50">
@@ -232,7 +232,7 @@ export default function Register() {
 							type="button"
 							onClick={handleGoogleSubmit}
 							disabled={isSubmitting}
-							className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
+							className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
 						>
 							Continue with Google
 						</button>
