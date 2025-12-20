@@ -3,7 +3,7 @@ import {
   GripHorizontalIcon, 
   MaximizeIcon,
   XIcon, 
-  SaveIcon
+  SaveIcon,
 } from "lucide-react";
 import { useNotesContext } from "../../context/NotesContext";
 import { WysiwygEditor, type WysiwygEditorRef } from "./WysiwygEditor";

@@ -7,8 +7,10 @@ import { ChatSidebar } from "../components/chat/ChatSidebar";
 import { ChatComposer } from "../components/chat/ChatComposer";
 import ChatMessageList from "../components/chat/ChatMessageList";
 import { NotesProvider, useNotesContext } from "../context/NotesContext";
+import { KnowledgebaseProvider } from "../context/KnowledgebaseContext";
 import { NotesSidebar, NoteEditor, MobileNoteEditor, TextSelectionPopup } from "../components/notes";
-import { Code2Icon, ForkKnifeIcon, HomeIcon, ShoppingBagIcon, SidebarClose, SidebarOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react";
+import { Code2Icon, ForkKnifeIcon, HomeIcon, ShoppingBagIcon, SidebarClose, SidebarOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon, BookOpen, MessageSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // =============================================================================
 // Home Page - Main chat interface
@@ -34,19 +36,21 @@ export default function Home() {
 
   return (
     <NotesProvider userId={user?.user?.uid}>
-      <HomeContent
-        user={user}
-        messages={messages}
-        chats={chats}
-        isProcessingUrl={isProcessingUrl}
-        isWebSearchMode={isWebSearchMode}
-        isReplying={isReplying}
-        submitPrompt={submitPrompt}
-        startNewChat={startNewChat}
-        selectChat={selectChat}
-        deleteChat={deleteChat}
-        setIsWebSearchMode={setIsWebSearchMode}
-      />
+      <KnowledgebaseProvider userId={user?.user?.uid}>
+        <HomeContent
+          user={user}
+          messages={messages}
+          chats={chats}
+          isProcessingUrl={isProcessingUrl}
+          isWebSearchMode={isWebSearchMode}
+          isReplying={isReplying}
+          submitPrompt={submitPrompt}
+          startNewChat={startNewChat}
+          selectChat={selectChat}
+          deleteChat={deleteChat}
+          setIsWebSearchMode={setIsWebSearchMode}
+        />
+      </KnowledgebaseProvider>
     </NotesProvider>
   );
 }
@@ -82,6 +86,7 @@ function HomeContent({
   deleteChat,
   setIsWebSearchMode,
 }: HomeContentProps) {
+  const navigate = useNavigate();
   const { notesSidebarOpen, setNotesSidebarOpen, noteEditorOpen } = useNotesContext();
 
   const toggleNotesSidebar = () => setNotesSidebarOpen(!notesSidebarOpen);
@@ -92,7 +97,7 @@ function HomeContent({
   const [input, setInput] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [showFeaturePopover, setShowFeaturePopover] = useState(false);
+  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
 
   // ---------------------------------------------------------------------------
   // Event handlers
@@ -142,23 +147,82 @@ function HomeContent({
             <p className="text-default/30 text-caption text-center">Chats</p>
             </div>
           )}
+            {/* Navigation and Coming Soon Features */}
             <div 
-              className="relative flex items-center gap-4 bg-secondary/80 p-default rounded-md cursor-pointer hover:bg-secondary/90 transition-colors"
-              onMouseEnter={() => setShowFeaturePopover(true)}
-              onMouseLeave={() => setShowFeaturePopover(false)}
-              onClick={() => setShowFeaturePopover(!showFeaturePopover)}
+              className="relative flex items-center gap-4 bg-secondary/80 p-default rounded-md"
             >
-              <HomeIcon className="text-primary size-6" />
-              <ShoppingBagIcon className="text-primary size-6" />
-              <ForkKnifeIcon className="text-primary size-6" />
-              <Code2Icon className="text-primary size-6" />
-              
-              {/* Popover */}
-              {showFeaturePopover && (
-                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
-                  These Features are 'coming soon' stay tuned!
-                </div>
-              )}
+              {/* Home/Chat - Current page (inactive) */}
+              <div
+                className="p-1 rounded"
+                title="Chat (Current)"
+              >
+                <MessageSquare className="text-accent size-6" />
+              </div>
+
+              {/* Knowledgebase - Functional */}
+              <button
+                onClick={() => navigate("/knowledgebase/home")}
+                className="hover:bg-secondary/60 p-1 rounded transition-colors"
+                title="Knowledgebase"
+              >
+                <BookOpen className="text-primary size-6" />
+              </button>
+
+              {/* Divider */}
+              <div className="w-px h-6 bg-default/20" />
+
+              {/* Coming Soon Features - Individual icons with hover */}
+              <div
+                className="relative p-1 rounded cursor-default"
+                onMouseEnter={() => setHoveredIcon('home')}
+                onMouseLeave={() => setHoveredIcon(null)}
+              >
+                <HomeIcon className="text-primary/50 size-6" />
+                {hoveredIcon === 'home' && (
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                    Coming soon!
+                  </div>
+                )}
+              </div>
+
+              <div
+                className="relative p-1 rounded cursor-default"
+                onMouseEnter={() => setHoveredIcon('shopping')}
+                onMouseLeave={() => setHoveredIcon(null)}
+              >
+                <ShoppingBagIcon className="text-primary/50 size-6" />
+                {hoveredIcon === 'shopping' && (
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                    Coming soon!
+                  </div>
+                )}
+              </div>
+
+              <div
+                className="relative p-1 rounded cursor-default"
+                onMouseEnter={() => setHoveredIcon('food')}
+                onMouseLeave={() => setHoveredIcon(null)}
+              >
+                <ForkKnifeIcon className="text-primary/50 size-6" />
+                {hoveredIcon === 'food' && (
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                    Coming soon!
+                  </div>
+                )}
+              </div>
+
+              <div
+                className="relative p-1 rounded cursor-default"
+                onMouseEnter={() => setHoveredIcon('code')}
+                onMouseLeave={() => setHoveredIcon(null)}
+              >
+                <Code2Icon className="text-primary/50 size-6" />
+                {hoveredIcon === 'code' && (
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                    Coming soon!
+                  </div>
+                )}
+              </div>
             </div>
             {notesSidebarOpen ? (
               <PanelRightCloseIcon onClick={toggleNotesSidebar} className="text-accent bg-secondary size-8 rounded-md cursor-pointer transition-all duration-200 hover:bg-secondary/80" />

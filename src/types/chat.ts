@@ -4,7 +4,7 @@
 
 export type ChatRole = "human" | "ai";
 
-export type WebAnswerSectionType = "answer" | "image" | "promoted" | "wikipedia" | "duckduckgo" | "others" | "articles" | "notes";
+export type WebAnswerSectionType = "answer" | "image" | "promoted" | "wikipedia" | "duckduckgo" | "others" | "articles" | "notes" | "corpus";
 
 // =============================================================================
 // Source Types - Used for displaying sources/references
@@ -15,6 +15,8 @@ export interface Source {
   url?: string;
   snippet?: string;
   noteId?: number;
+  corpusId?: number;
+  knowledgebaseName?: string;
 }
 
 // =============================================================================
@@ -34,6 +36,16 @@ export interface NoteAnswerData {
   similarity: number;
 }
 
+export interface CorpusAnswerData {
+  corpusId: number;
+  title: string;
+  body: string;
+  knowledgebaseName: string;
+  knowledgebaseId: number;
+  keywords: string[];
+  similarity: number;
+}
+
 export interface AiSection {
   type?: WebAnswerSectionType;
   topic?: string;
@@ -48,6 +60,7 @@ export interface AiSection {
   others?: OtherAnswerData[];
   articles?: ProcessedArticle[];
   notes?: NoteAnswerData[];
+  corpus?: CorpusAnswerData[];
   image?: string;
 }
 
