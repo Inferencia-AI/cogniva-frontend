@@ -135,7 +135,7 @@ export default function KnowledgebaseDetail() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+      <div className=" w-full mx-auto px-4 sm:px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Corpus List - Main Content */}
           <div className="lg:col-span-2 space-y-6 animate-fade-in-up animation-delay-200">
@@ -162,7 +162,7 @@ export default function KnowledgebaseDetail() {
             )}
 
             {/* Subscribers Count */}
-            <div className="bg-secondary rounded-lg p-4">
+            <div className="bg-secondary/20 rounded-lg p-4">
               <h3 className="font-semibold text-default mb-2">Subscribers</h3>
               <p className="text-3xl font-bold text-accent">
                 {currentKnowledgebase.subscribers_ids?.length || 0}

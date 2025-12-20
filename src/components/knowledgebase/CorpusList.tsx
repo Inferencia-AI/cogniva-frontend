@@ -149,7 +149,7 @@ export const CorpusList: FC<CorpusListProps> = ({
   }
 
   return (
-    <div className={`bg-secondary rounded-lg p-4 ${className}`}>
+    <div className={` p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-default">Corpus ({corpusList.length})</h3>
         {showActions && (
@@ -167,7 +167,7 @@ export const CorpusList: FC<CorpusListProps> = ({
         {corpusList.map((corpus) => (
           <div
             key={corpus.id}
-            className="group bg-primary rounded-lg p-4 hover:ring-1 hover:ring-accent/30 transition-all cursor-pointer"
+            className="group p-4  transition-all cursor-pointer"
             onClick={() => handleCorpusClick(corpus)}
           >
             <div className="flex items-start justify-between gap-3">

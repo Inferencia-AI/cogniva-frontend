@@ -52,15 +52,15 @@ export const ManagerList: FC<ManagerListProps> = ({
   const roles: ManagerRole[] = ["admin", "editor", "approver", "viewer"];
 
   return (
-    <div className="bg-secondary rounded-lg p-4">
+    <div className="bg-secondary/20 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-default">Managers</h3>
         {isAdmin && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-accent/10 text-accent rounded-md text-caption font-medium hover:bg-accent/20 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 bg-accent/10 text-default rounded-md text-caption font-medium hover:bg-accent/20 transition-colors"
           >
-            <UserPlus className="size-4" />
+            <UserPlus className="size-4 text-default" />
             Add Manager
           </button>
         )}
@@ -117,7 +117,7 @@ export const ManagerList: FC<ManagerListProps> = ({
           managers.map((manager) => (
             <div
               key={manager.userId}
-              className="flex items-center justify-between gap-2 p-3 bg-primary rounded-lg"
+              className="flex items-center justify-between gap-2 p-3 bg-secondary/20 rounded-lg"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">

@@ -25,7 +25,7 @@ export const KnowledgebaseCard: FC<KnowledgebaseCardProps> = ({
 
   return (
     <div
-      className="group relative bg-secondary rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-accent/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+      className="group relative bg-secondary/20 rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-accent/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
       onClick={onClick}
     >
       {/* Banner */}

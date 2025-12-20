@@ -174,7 +174,7 @@ export default function KnowledgebaseHome() {
             </div>
             <div className="space-y-4">
               {homeData.subscribed.map((kb: KnowledgebaseWithNotes) => (
-                <div key={kb.id} className="bg-secondary rounded-xl p-4">
+                <div key={kb.id} className="bg-secondary/50 rounded-xl p-4">
                   <div
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => handleKnowledgebaseClick(kb.id)}
