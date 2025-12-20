@@ -9,7 +9,7 @@ import ChatMessageList from "../components/chat/ChatMessageList";
 import { NotesProvider, useNotesContext } from "../context/NotesContext";
 import { KnowledgebaseProvider } from "../context/KnowledgebaseContext";
 import { NotesSidebar, NoteEditor, MobileNoteEditor, TextSelectionPopup } from "../components/notes";
-import { Code2Icon, ForkKnifeIcon, HomeIcon, ShoppingBagIcon, SidebarClose, SidebarOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon, BookOpen, MessageSquare } from "lucide-react";
+import { Code2Icon, ForkKnifeIcon, HomeIcon, ShoppingBagIcon, SidebarClose, SidebarOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // =============================================================================

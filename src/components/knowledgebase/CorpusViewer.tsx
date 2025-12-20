@@ -382,7 +382,7 @@ export const CorpusViewer: FC = () => {
     <div className="fixed inset-0 z-50 flex flex-col bg-primary animate-fade-in">
       {/* ===== Fixed Header ===== */}
       <Header
-        title={localCorpus.title}
+        title={localCorpus.title ?? undefined}
         scrolled={scrolled}
         isLiked={isLiked}
         likeCount={likeCount}
@@ -402,12 +402,12 @@ export const CorpusViewer: FC = () => {
       <div id="corpus-viewer-scroll" className="flex-1 overflow-y-auto">
         <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <ArticleHeader
-            corpus={localCorpus}
-            likeCount={likeCount}
-            commentCount={commentCount}
-          />
+              corpus={localCorpus}
+              likeCount={likeCount}
+              commentCount={commentCount}
+            />
           <Divider />
-          <ArticleBody body={localCorpus.body} />
+            <ArticleBody body={localCorpus.body ?? undefined} />
         </article>
       </div>
 
@@ -571,10 +571,10 @@ const ArticleHeader: FC<ArticleHeaderProps> = ({ corpus, likeCount, commentCount
       {corpus.title || "Untitled"}
     </h1>
 
-    <div className="flex flex-wrap items-center gap-3 text-sm text-default/50">
+      <div className="flex flex-wrap items-center gap-3 text-sm text-default/50">
       <span className="inline-flex items-center gap-1">
         <Clock className="size-4" />
-        {estimateReadingTime(corpus.body)}
+        {estimateReadingTime(corpus.body ?? undefined)}
       </span>
 
       {corpus.is_approved ? (
