@@ -84,7 +84,7 @@ export const KnowledgebaseSearchBar: FC<KnowledgebaseSearchBarProps> = ({
         <button
           onClick={handleSearch}
           disabled={!query.trim() || isLoading}
-          className="px-6 py-3 button rounded-lg font-medium hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="px-6 py-3 button rounded-md font-medium hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isLoading ? "Searching..." : "Search"}
         </button>
