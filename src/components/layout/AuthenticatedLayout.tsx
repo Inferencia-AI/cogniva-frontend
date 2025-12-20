@@ -5,6 +5,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import { NotesProvider } from "../../context/NotesContext";
 import { KnowledgebaseProvider } from "../../context/KnowledgebaseContext";
 import { AppLayout } from "./AppLayout";
+import GlobalLoader from "../ui/globalLoader";
 
 // =============================================================================
 // AuthenticatedLayout - Wrapper for authenticated pages with shared layout
@@ -32,11 +33,7 @@ export const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({ children }) 
   }, [navigate]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-primary">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <GlobalLoader fullscreen message="Checking session..." />;
   }
 
   if (!user) {

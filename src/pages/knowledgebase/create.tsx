@@ -5,6 +5,7 @@ import { useKnowledgebaseContext } from "../../context/KnowledgebaseContext";
 import { ManagerList } from "../../components/knowledgebase";
 import api from "../../utils/api";
 import type { ManagerRole } from "../../types/knowledgebase";
+import GlobalLoader from "../../components/ui/globalLoader";
 
 // =============================================================================
 // Knowledgebase Create/Edit Page
@@ -171,11 +172,7 @@ export default function KnowledgebaseForm() {
 
   // Loading state for edit mode
   if (isEditMode && isLoading && !currentKnowledgebase) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <GlobalLoader fullscreen />;
   }
 
   return (

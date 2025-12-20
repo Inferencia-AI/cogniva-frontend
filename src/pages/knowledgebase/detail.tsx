@@ -6,6 +6,7 @@ import {
   CorpusList,
 } from "../../components/knowledgebase";
 import { useKnowledgebaseContext } from "../../context/KnowledgebaseContext";
+import GlobalLoader from "../../components/ui/globalLoader";
 import type { ManagerRole } from "../../types/knowledgebase";
 
 // =============================================================================
@@ -93,11 +94,7 @@ export default function KnowledgebaseDetail() {
 
   // Loading state
   if (isLoading && !currentKnowledgebase) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <GlobalLoader fullscreen />;
   }
 
   if (!currentKnowledgebase) {
