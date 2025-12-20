@@ -25,7 +25,7 @@ export const KnowledgebaseCard: FC<KnowledgebaseCardProps> = ({
 
   return (
     <div
-      className="group relative bg-secondary rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-accent/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+      className="group relative bg-secondary/20 rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-accent/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
       onClick={onClick}
     >
       {/* Banner */}
@@ -40,7 +40,7 @@ export const KnowledgebaseCard: FC<KnowledgebaseCardProps> = ({
         
         {/* Image overlay */}
         <div className="absolute -bottom-6 left-4">
-          <div className="w-14 h-14 rounded-lg bg-primary border-2 border-secondary overflow-hidden flex items-center justify-center">
+          <div className="w-14 h-14 rounded-md bg-primary border-2 border-secondary overflow-hidden flex items-center justify-center">
             {knowledgebase.image_url ? (
               <img
                 src={knowledgebase.image_url}

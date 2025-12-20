@@ -33,7 +33,7 @@ export const UploadToKnowledgebaseDialog: FC<UploadToKnowledgebaseDialogProps> =
         </p>
         <button
           onClick={onClose}
-          className="mt-4 px-4 py-2 bg-accent text-white rounded-lg"
+          className="mt-4 px-4 py-2 bg-accent text-white rounded-md"
         >
           Close
         </button>

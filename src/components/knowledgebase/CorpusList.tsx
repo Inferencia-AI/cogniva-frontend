@@ -93,11 +93,11 @@ export const CorpusList: FC<CorpusListProps> = ({
   // Loading state
   if (isCorpusLoading) {
     return (
-      <div className={`bg-secondary rounded-lg p-4 ${className}`}>
+      <div className={`bg-secondary rounded-md p-4 ${className}`}>
         <h3 className="font-semibold text-default mb-4">Corpus</h3>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-primary rounded-lg p-4">
+            <div key={i} className="animate-pulse bg-primary rounded-md p-4">
               <div className="h-4 bg-default/10 rounded w-1/3 mb-2"></div>
               <div className="h-3 bg-default/10 rounded w-2/3 mb-2"></div>
               <div className="h-3 bg-default/10 rounded w-1/2"></div>
@@ -111,11 +111,11 @@ export const CorpusList: FC<CorpusListProps> = ({
   // Error state
   if (corpusError) {
     return (
-      <div className={`bg-secondary rounded-lg p-4 ${className}`}>
+      <div className={`bg-secondary rounded-md p-4 ${className}`}>
         <p className="text-red-400 text-center py-4">{corpusError}</p>
         <button
           onClick={() => fetchKnowledgebaseCorpus(knowledgebaseId, showDrafts)}
-          className="block mx-auto px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/80 transition-colors"
+          className="block mx-auto px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80 transition-colors"
         >
           Try Again
         </button>
@@ -126,7 +126,7 @@ export const CorpusList: FC<CorpusListProps> = ({
   // Empty state
   if (corpusList.length === 0) {
     return (
-      <div className={`bg-secondary rounded-lg p-4 ${className}`}>
+      <div className={`bg-secondary rounded-md p-4 ${className}`}>
         <div className="text-center py-8">
           <FileText className="size-12 text-default/20 mx-auto mb-3" />
           <p className="text-default/40 text-body">
@@ -137,7 +137,7 @@ export const CorpusList: FC<CorpusListProps> = ({
           {showActions && (
             <button
               onClick={handleCreateClick}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/80 transition-colors"
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80 transition-colors"
             >
               <Plus className="size-4" />
               Create Corpus
@@ -149,13 +149,13 @@ export const CorpusList: FC<CorpusListProps> = ({
   }
 
   return (
-    <div className={`bg-secondary rounded-lg p-4 ${className}`}>
+    <div className={` p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-default">Corpus ({corpusList.length})</h3>
         {showActions && (
           <button
             onClick={handleCreateClick}
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent text-white text-sm rounded-lg hover:bg-accent/80 transition-colors"
+            className="button inline-flex items-center gap-1 px-3 py-1.5  rounded-md hover:bg-accent/80 transition-colors"
           >
             <Plus className="size-4" />
             Create
@@ -167,7 +167,7 @@ export const CorpusList: FC<CorpusListProps> = ({
         {corpusList.map((corpus) => (
           <div
             key={corpus.id}
-            className="group bg-primary rounded-lg p-4 hover:ring-1 hover:ring-accent/30 transition-all cursor-pointer"
+            className="group p-4  transition-all cursor-pointer"
             onClick={() => handleCorpusClick(corpus)}
           >
             <div className="flex items-start justify-between gap-3">

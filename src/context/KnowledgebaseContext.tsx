@@ -142,6 +142,13 @@ export function KnowledgebaseProvider({ children, userId }: KnowledgebaseProvide
     setEditingCorpus(null);
   }, []);
 
+  // Sync viewedCorpus with currentCorpus updates
+  useEffect(() => {
+    if (corpusState.currentCorpus && viewedCorpus && corpusState.currentCorpus.id === viewedCorpus.id) {
+      setViewedCorpus(corpusState.currentCorpus);
+    }
+  }, [corpusState.currentCorpus, viewedCorpus]);
+
   // Fetch home data when userId changes
   useEffect(() => {
     if (userId) {

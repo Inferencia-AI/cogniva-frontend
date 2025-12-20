@@ -57,7 +57,7 @@ export default function OtherWebResults({ data, summary }: OtherWebResultsProps)
 
       {selected ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-default" role="dialog" aria-modal="true">
-          <div className="bg-primary border border-accent rounded-lg shadow-lg max-h-[90vh] w-full max-w-3xl overflow-hidden">
+          <div className="bg-primary border border-accent rounded-md shadow-lg max-h-[90vh] w-full max-w-3xl overflow-hidden">
             <div className="flex items-center justify-between p-default border-b border-accent">
               <p className="text-heading truncate">{selected.link || "Source details"}</p>
               <button type="button" className="text-caption text-default hover:text-accent" onClick={closeDialog}>

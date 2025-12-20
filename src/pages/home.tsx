@@ -151,61 +151,43 @@ function HomeContent({
             <div 
               className="relative flex items-center gap-4 bg-secondary/80 p-default rounded-md"
             >
-              {/* Home/Chat - Current page (inactive) */}
               <div
-                className="p-1 rounded"
-                title="Chat (Current)"
-              >
-                <MessageSquare className="text-accent size-6" />
-              </div>
-
-              {/* Knowledgebase - Functional */}
-              <button
-                onClick={() => navigate("/knowledgebase/home")}
-                className="hover:bg-secondary/60 p-1 rounded transition-colors"
-                title="Knowledgebase"
-              >
-                <BookOpen className="text-primary size-6" />
-              </button>
-
-              {/* Divider */}
-              <div className="w-px h-6 bg-default/20" />
-
-              {/* Coming Soon Features - Individual icons with hover */}
-              <div
-                className="relative p-1 rounded cursor-default"
+                className="relative p-1 cursor-default border-b-2 border-accent"
                 onMouseEnter={() => setHoveredIcon('home')}
                 onMouseLeave={() => setHoveredIcon(null)}
               >
-                <HomeIcon className="text-primary/50 size-6" />
-                {hoveredIcon === 'home' && (
-                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
-                    Coming soon!
-                  </div>
-                )}
+                <HomeIcon className="text-primary size-6" />
+              </div>
+              <div
+                className="relative p-1 cursor-default"
+                onMouseEnter={() => setHoveredIcon('knowledgebase')}
+                onMouseLeave={() => setHoveredIcon(null)}
+                onClick={() => navigate("/knowledgebase/home")}
+              >
+                <BookOpen className="text-primary size-6" />
               </div>
 
               <div
-                className="relative p-1 rounded cursor-default"
+                className="relative p-1 cursor-default"
                 onMouseEnter={() => setHoveredIcon('shopping')}
                 onMouseLeave={() => setHoveredIcon(null)}
               >
                 <ShoppingBagIcon className="text-primary/50 size-6" />
                 {hoveredIcon === 'shopping' && (
-                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
                     Coming soon!
                   </div>
                 )}
               </div>
 
               <div
-                className="relative p-1 rounded cursor-default"
+                className="relative p-1 cursor-default"
                 onMouseEnter={() => setHoveredIcon('food')}
                 onMouseLeave={() => setHoveredIcon(null)}
               >
                 <ForkKnifeIcon className="text-primary/50 size-6" />
                 {hoveredIcon === 'food' && (
-                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-md p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
                     Coming soon!
                   </div>
                 )}
@@ -218,7 +200,7 @@ function HomeContent({
               >
                 <Code2Icon className="text-primary/50 size-6" />
                 {hoveredIcon === 'code' && (
-                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-lg p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-secondary border border-default/20 rounded-md p-2 text-default text-sm whitespace-nowrap shadow-lg z-50">
                     Coming soon!
                   </div>
                 )}

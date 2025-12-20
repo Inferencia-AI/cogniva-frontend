@@ -6,6 +6,7 @@ import {
   CorpusList,
 } from "../../components/knowledgebase";
 import { useKnowledgebaseContext } from "../../context/KnowledgebaseContext";
+import GlobalLoader from "../../components/ui/globalLoader";
 import type { ManagerRole } from "../../types/knowledgebase";
 
 // =============================================================================
@@ -93,11 +94,7 @@ export default function KnowledgebaseDetail() {
 
   // Loading state
   if (isLoading && !currentKnowledgebase) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <GlobalLoader fullscreen />;
   }
 
   if (!currentKnowledgebase) {
@@ -106,7 +103,7 @@ export default function KnowledgebaseDetail() {
         <p className="text-default text-lg mb-4">Knowledgebase not found</p>
         <button
           onClick={handleBack}
-          className="px-4 py-2 bg-secondary text-default rounded-lg hover:bg-secondary/80 transition-colors"
+          className="px-4 py-2 bg-secondary text-default rounded-md hover:bg-secondary/80 transition-colors"
         >
           Go back
         </button>
@@ -135,7 +132,7 @@ export default function KnowledgebaseDetail() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+      <div className=" w-full mx-auto px-4 sm:px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Corpus List - Main Content */}
           <div className="lg:col-span-2 space-y-6 animate-fade-in-up animation-delay-200">
@@ -162,9 +159,9 @@ export default function KnowledgebaseDetail() {
             )}
 
             {/* Subscribers Count */}
-            <div className="bg-secondary rounded-lg p-4">
+            <div className="bg-secondary/20 rounded-md p-4">
               <h3 className="font-semibold text-default mb-2">Subscribers</h3>
-              <p className="text-3xl font-bold text-accent">
+              <p className="text-3xl font-bold text-secondary">
                 {currentKnowledgebase.subscribers_ids?.length || 0}
               </p>
               <p className="text-default/50 text-caption mt-1">people subscribed</p>
@@ -185,13 +182,13 @@ export default function KnowledgebaseDetail() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-default hover:bg-primary rounded-lg transition-colors"
+                className="px-4 py-2 text-default hover:bg-primary rounded-md transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
               >
                 Delete
               </button>

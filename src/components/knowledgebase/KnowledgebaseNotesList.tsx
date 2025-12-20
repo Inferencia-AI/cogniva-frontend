@@ -36,11 +36,11 @@ export const KnowledgebaseNotesList: FC<KnowledgebaseNotesListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-secondary rounded-lg p-4">
+      <div className="bg-secondary rounded-md p-4">
         <h3 className="font-semibold text-default mb-4">Notes</h3>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-primary rounded-lg p-4">
+            <div key={i} className="animate-pulse bg-primary rounded-md p-4">
               <div className="h-4 bg-default/10 rounded w-1/3 mb-2"></div>
               <div className="h-3 bg-default/10 rounded w-2/3"></div>
             </div>
@@ -51,7 +51,7 @@ export const KnowledgebaseNotesList: FC<KnowledgebaseNotesListProps> = ({
   }
 
   return (
-    <div className="bg-secondary rounded-lg p-4">
+    <div className="bg-secondary rounded-md p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-default">Notes ({notes.length})</h3>
       </div>
@@ -69,7 +69,7 @@ export const KnowledgebaseNotesList: FC<KnowledgebaseNotesListProps> = ({
           {notes.map((note) => (
             <div
               key={note.id}
-              className="group bg-primary rounded-lg p-4 hover:ring-1 hover:ring-accent/30 transition-all cursor-pointer"
+              className="group bg-primary rounded-md p-4 hover:ring-1 hover:ring-accent/30 transition-all cursor-pointer"
               onClick={() => onViewNote?.(note.id)}
             >
               <div className="flex items-start justify-between gap-3">

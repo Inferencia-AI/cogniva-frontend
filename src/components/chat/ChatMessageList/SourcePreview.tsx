@@ -21,7 +21,7 @@ export default function SourcePreview({ source, onClose }: SourcePreviewProps) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/80 backdrop-blur-sm">
       <SourcePreviewHeader source={source} onClose={onClose} onOpenNewTab={handleOpenNewTab} />
-      <div className="flex-1 m-4 bg-primary border border-accent/20 rounded-lg overflow-hidden min-h-0">
+      <div className="flex-1 m-4 bg-primary border border-accent/20 rounded-md overflow-hidden min-h-0">
         <SourcePreviewBody
           isLoading={isPreviewLoading}
           blocks={previewBlocks}

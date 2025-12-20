@@ -127,7 +127,7 @@ export default function Login() {
             </div>
 
             {error ? (
-              <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              <div className="rounded-md border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                 {error}
               </div>
             ) : null}
@@ -143,7 +143,7 @@ export default function Login() {
                   placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
+                  className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
                   required
                   autoComplete="email"
                 />
@@ -159,7 +159,7 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
+                  className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/40 px-4 py-3 text-white placeholder:text-[var(--text-color-default)]/60 shadow-inner focus:border-white/60 focus:outline-none"
                   required
                   autoComplete="current-password"
                 />
@@ -184,7 +184,7 @@ export default function Login() {
               type="button"
               onClick={() => navigate("/register")}
               disabled={isSubmitting}
-              className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Create an account
             </button>
@@ -193,7 +193,7 @@ export default function Login() {
               type="button"
               onClick={handleGoogleSubmit}
               disabled={isSubmitting}
-              className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Continue with Google
             </button>
@@ -212,7 +212,7 @@ export default function Login() {
                 }
               }}
               disabled={isSubmitting}
-              className="w-full rounded-lg border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-md border border-[var(--color-secondary)]/50 bg-[var(--color-primary)]/60 px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent)]/70 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Continue with Facebook
             </button>

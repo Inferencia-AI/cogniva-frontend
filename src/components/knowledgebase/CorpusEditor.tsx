@@ -168,7 +168,7 @@ export const CorpusEditor: FC = () => {
           </h2>
           <button
             onClick={handleClose}
-            className="p-2 text-default/40 hover:text-default hover:bg-primary rounded-lg transition-colors"
+            className="p-2 text-default/40 hover:text-default hover:bg-primary rounded-md transition-colors"
           >
             <X className="size-5" />
           </button>
@@ -189,7 +189,7 @@ export const CorpusEditor: FC = () => {
                   setTitle(e.target.value)
                 }
                 placeholder="Enter corpus title..."
-                className="w-full px-4 py-3 bg-primary text-default text-lg rounded-lg border border-default/10 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-3 bg-primary text-default text-lg rounded-md border border-default/10 focus:border-accent focus:outline-none"
               />
             </div>
 
@@ -199,7 +199,7 @@ export const CorpusEditor: FC = () => {
                 Keywords{" "}
                 <span className="text-default/40 font-normal">(for search)</span>
               </label>
-              <div className="flex flex-wrap gap-2 p-3 bg-primary rounded-lg border border-default/10 min-h-[48px]">
+              <div className="flex flex-wrap gap-2 p-3 bg-primary rounded-md border border-default/10 min-h-[48px]">
                 {keywords.map((keyword, idx) => (
                   <span
                     key={idx}
@@ -235,7 +235,7 @@ export const CorpusEditor: FC = () => {
               <label className="block text-sm font-medium text-default mb-2">
                 Content
               </label>
-              <div className="border border-default/10 rounded-lg min-h-[300px] bg-primary">
+              <div className="border border-default/10 rounded-md min-h-[300px] bg-primary">
                 <WysiwygEditor
                   content={body}
                   onChange={setBody}
@@ -281,14 +281,14 @@ export const CorpusEditor: FC = () => {
           <button
             onClick={handleClose}
             disabled={isSaving}
-            className="px-4 py-2 text-default/60 hover:text-default rounded-lg transition-colors"
+            className="px-4 py-2 text-default/60 hover:text-default rounded-md transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving || isCorpusLoading}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Save className="size-4" />
             {isSaving

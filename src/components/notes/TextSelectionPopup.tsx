@@ -132,7 +132,7 @@ export const TextSelectionPopup: FC = () => {
         top: `${position.y}px`,
       }}
     >
-      <div className="flex items-center gap-1 bg-secondary rounded-lg shadow-lg border border-accent p-1">
+      <div className="flex items-center gap-1 bg-secondary rounded-md shadow-lg border border-accent p-1">
         {/* Close button */}
         <button
           onClick={handleClose}

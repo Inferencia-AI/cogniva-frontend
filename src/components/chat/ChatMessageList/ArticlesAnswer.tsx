@@ -54,7 +54,7 @@ export default function ArticlesAnswer({ articles }: ArticlesAnswerProps) {
             {restArticles.map((article, index) => (
               <div
                 key={`article-${index}`}
-                className="flex gap-3 border border-gray-200 dark:border-gray-700 rounded-lg p-2"
+                className="flex gap-3 border border-gray-200 dark:border-gray-700 rounded-md p-2"
               >
                 {article.image ? (
                   <img
