@@ -282,7 +282,7 @@ IMPORTANT: Answer ONLY using the information from these sources. Do not use any 
           const lastMessageIndex = messages.length - 1;
           const lastMessage = messages[lastMessageIndex];
           
-          if (lastMessage && lastMessage.role === "ai" && Array.isArray(lastMessage.content)) {
+        if (lastMessage && lastMessage.role === "ai" && Array.isArray(lastMessage.content)) {
             // Remove showExpandButton from existing sections and add new external sections
             const updatedContent = [
               ...lastMessage.content.map(section => ({ ...section, showExpandButton: false })),

@@ -37,7 +37,7 @@ function MarkdownCodeBlock({ className, children, ...props }: any) {
 
 export default function AIResponseContent({ section }: AIResponseContentProps) {
   const isStructuredResponse = Array.isArray(section?.response);
-  const hasCodeFence = typeof section?.response === "string" && section?.response.includes("```");
+  // const hasCodeFence = typeof section?.response === "string" && section?.response.includes("```");
 
   if (isStructuredResponse) {
     return (
