@@ -6,9 +6,11 @@ interface AIMessageProps {
   onOpenSource: (source: Source) => void;
   onOpenNote?: (noteId: number) => void;
   onOpenCorpus?: (corpusId: number) => void;
+  onExpandKnowledge?: () => void;
+  isReplying?: boolean;
 }
 
-export default function AIMessage({ content, onOpenSource, onOpenNote, onOpenCorpus }: AIMessageProps) {
+export default function AIMessage({ content, onOpenSource, onOpenNote, onOpenCorpus, onExpandKnowledge, isReplying }: AIMessageProps) {
   const aiSections = Array.isArray(content) ? content : [content];
 
   return (
@@ -20,6 +22,8 @@ export default function AIMessage({ content, onOpenSource, onOpenNote, onOpenCor
           onOpenSource={onOpenSource}
           onOpenNote={onOpenNote}
           onOpenCorpus={onOpenCorpus}
+          onExpandKnowledge={onExpandKnowledge}
+          isReplying={isReplying}
         />
       ))}
     </div>

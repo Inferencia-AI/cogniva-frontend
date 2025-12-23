@@ -32,6 +32,7 @@ export default function Home() {
     selectChat,
     deleteChat,
     setIsWebSearchMode,
+    expandToExternalKnowledge,
   } = useChatSession();
 
   return (
@@ -49,6 +50,7 @@ export default function Home() {
           selectChat={selectChat}
           deleteChat={deleteChat}
           setIsWebSearchMode={setIsWebSearchMode}
+          expandToExternalKnowledge={expandToExternalKnowledge}
         />
       </KnowledgebaseProvider>
     </NotesProvider>
@@ -71,6 +73,7 @@ interface HomeContentProps {
   selectChat: (chat: ReturnType<typeof useChatSession>["chats"][number]) => void;
   deleteChat: (chatId: number) => Promise<void>;
   setIsWebSearchMode: React.Dispatch<React.SetStateAction<boolean>>;
+  expandToExternalKnowledge: () => Promise<void>;
 }
 
 function HomeContent({
@@ -85,6 +88,7 @@ function HomeContent({
   selectChat,
   deleteChat,
   setIsWebSearchMode,
+  expandToExternalKnowledge,
 }: HomeContentProps) {
   const navigate = useNavigate();
   const { notesSidebarOpen, setNotesSidebarOpen, noteEditorOpen } = useNotesContext();
@@ -242,7 +246,11 @@ function HomeContent({
             } ${(sidebarOpen || notesSidebarOpen) ? "max-sm:invisible max-sm:pointer-events-none" : ""}`}
           >
             {messages.length > 0 ? (
-              <ChatMessageList messages={messages} isReplying={isReplying} />
+              <ChatMessageList 
+                messages={messages} 
+                isReplying={isReplying} 
+                onExpandKnowledge={expandToExternalKnowledge}
+              />
             ) : (
               <div className="flex-1 flex flex-col justify-center items-center h-full">
                 <p className="text-default text-heading">Welcome to Cogniva Chat!</p>

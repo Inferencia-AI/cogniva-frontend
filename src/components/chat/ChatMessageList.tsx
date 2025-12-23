@@ -10,9 +10,10 @@ import type { ChatMessage, Source } from "../../types/chat";
 interface ChatMessageListProps {
   messages: ChatMessage[];
   isReplying: boolean;
+  onExpandKnowledge?: () => void;
 }
 
-export default function ChatMessageList({ messages, isReplying }: ChatMessageListProps) {
+export default function ChatMessageList({ messages, isReplying, onExpandKnowledge }: ChatMessageListProps) {
   const [previewSource, setPreviewSource] = useState<Source | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const { notes, openNoteEditor } = useNotesContext();
@@ -66,6 +67,8 @@ export default function ChatMessageList({ messages, isReplying }: ChatMessageLis
                 onOpenSource={handleOpenSource} 
                 onOpenNote={handleOpenNote}
                 onOpenCorpus={handleOpenCorpus}
+                onExpandKnowledge={onExpandKnowledge}
+                isReplying={isReplying}
               />
             );
           })

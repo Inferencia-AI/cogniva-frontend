@@ -62,6 +62,9 @@ export interface AiSection {
   notes?: NoteAnswerData[];
   corpus?: CorpusAnswerData[];
   image?: string;
+  // New fields for knowledge source tracking
+  answerSource?: "notes" | "corpus" | "both" | "external" | null;
+  showExpandButton?: boolean;
 }
 
 // =============================================================================

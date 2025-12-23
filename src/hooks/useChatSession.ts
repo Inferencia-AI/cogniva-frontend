@@ -32,6 +32,8 @@ export function useChatSession() {
   const [isProcessingUrl, setIsProcessingUrl] = useState(false);
   const [isWebSearchMode, setIsWebSearchMode] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
+  const [lastQuery, setLastQuery] = useState<string>("");
+
 
   // ---------------------------------------------------------------------------
   // Fetch user data from API
@@ -101,6 +103,11 @@ export function useChatSession() {
   const selectChat = useCallback((chat: ChatSummary) => {
     setSelectedChatId(chat.id);
     setMessages(chat.messages || []);
+    // Set lastQuery from the last human message in the loaded chat
+    const lastHuman = [...(chat.messages || [])].reverse().find(m => m.role === "human");
+    if (lastHuman && typeof lastHuman.content === "string") {
+      setLastQuery(lastHuman.content);
+    }
   }, []);
 
   const deleteChat = useCallback(async (chatId: number) => {
@@ -119,20 +126,31 @@ export function useChatSession() {
 
   // ---------------------------------------------------------------------------
   // Send a regular chat message
+  // Flow: First search notes/knowledgebases -> Use LLM with context if found
+  // -> Only use LLM's own knowledge when user explicitly requests it
   // ---------------------------------------------------------------------------
   const handleSendMessage = useCallback(
-    async (prompt: string) => {
-      const newMessages: ChatMessage[] = [...messages, { role: "human", content: prompt }];
-      setMessages(newMessages);
+    async (prompt: string, forceExternalKnowledge = false) => {
+      // When forcing external knowledge, we don't add a new human message
+      // We just append the AI response to the existing conversation
+      const newMessages: ChatMessage[] = forceExternalKnowledge 
+        ? [...messages] 
+        : [...messages, { role: "human", content: prompt }];
+      
+      if (!forceExternalKnowledge) {
+        setMessages(newMessages);
+      }
       setIsReplying(true);
 
       const sections: AiSection[] = [];
       let retrievedNotes: any[] = [];
       let retrievedCorpus: any[] = [];
+      let answerSource: "notes" | "corpus" | "both" | "external" | null = null;
 
       try {
-        // Search user's notes and subscribed knowledgebases' corpus in parallel
-        if (user?.user?.uid) {
+        // Skip searching notes/corpus if user wants external knowledge
+        if (!forceExternalKnowledge && user?.user?.uid) {
+          // Search user's notes and subscribed knowledgebases' corpus in parallel
           const [notesResult, corpusResult] = await Promise.allSettled([
             // Search user's personal notes
             api.post("/search-notes", {
@@ -158,6 +176,15 @@ export function useChatSession() {
             sections.push(corpusResult.value.data as AiSection);
           }
 
+          // Determine answer source
+          if (retrievedNotes.length > 0 && retrievedCorpus.length > 0) {
+            answerSource = "both";
+          } else if (retrievedNotes.length > 0) {
+            answerSource = "notes";
+          } else if (retrievedCorpus.length > 0) {
+            answerSource = "corpus";
+          }
+
           // Update messages immediately with notes and corpus
           if (sections.length > 0) {
             setMessages([...newMessages, { role: "ai", content: [...sections] }]);
@@ -166,34 +193,34 @@ export function useChatSession() {
 
         // Generate RAG-based response if we have context from notes or corpus
         const hasContext = retrievedNotes.length > 0 || retrievedCorpus.length > 0;
-        
-        if (hasContext) {
+
+        if (hasContext && !forceExternalKnowledge) {
           try {
             // Construct context from retrieved notes
             const notesContext = retrievedNotes
               .map((note, index) => {
-                const cleanBody = note.body?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '';
+                const cleanBody = note.body?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || "";
                 return `Personal Note ${index + 1} - "${note.title}":\n${cleanBody.slice(0, 1500)}`;
               })
-              .join('\n\n---\n\n');
+              .join("\n\n---\n\n");
 
             // Construct context from retrieved corpus
             const corpusContext = retrievedCorpus
               .map((item, index) => {
-                const cleanBody = item.body?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '';
-                const keywords = item.keywords?.length ? `Keywords: ${item.keywords.join(', ')}` : '';
+                const cleanBody = item.body?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || "";
+                const keywords = item.keywords?.length ? `Keywords: ${item.keywords.join(", ")}` : "";
                 return `Knowledge Article ${index + 1} - "${item.title}" (from ${item.knowledgebaseName}):\n${keywords}\n${cleanBody.slice(0, 1500)}`;
               })
-              .join('\n\n---\n\n');
+              .join("\n\n---\n\n");
 
             // Combine both contexts
-            const combinedContext = [notesContext, corpusContext].filter(Boolean).join('\n\n==========\n\n');
+            const combinedContext = [notesContext, corpusContext].filter(Boolean).join("\n\n==========\n\n");
 
-            const ragPrompt = `Based on the following knowledge sources, provide a comprehensive answer to the user's question: "${prompt}"
+            const ragPrompt = `Based ONLY on the following knowledge sources, provide a comprehensive answer to the user's question: "${prompt}"
 
 ${combinedContext}
 
-Please synthesize the information from these sources to directly answer the user's question. Prioritize information from the knowledge articles if relevant. If the sources don't fully answer the question, focus on what relevant information they do provide and indicate what aspects might need additional research.`;
+IMPORTANT: Answer ONLY using the information from these sources. Do not use any external knowledge. If the sources don't contain enough information to fully answer the question, clearly state what information is available and what is missing.`;
 
             const ragMessages: ChatMessage[] = [{ role: "human", content: ragPrompt }];
             const ragResponse = await api.post("/chat", {
@@ -202,37 +229,79 @@ Please synthesize the information from these sources to directly answer the user
             });
 
             const ragPayload = (Array.isArray(ragResponse.data) ? ragResponse.data.flat() : [ragResponse.data]) as AiSection[];
-            
+
             // Mark RAG sections with a distinct topic based on sources
-            const ragTopic = retrievedCorpus.length > 0 && retrievedNotes.length > 0
-              ? "From Your Knowledge Sources"
-              : retrievedCorpus.length > 0
-                ? "From Your Knowledgebases"
-                : "From Your Notes";
+            const ragTopic =
+              retrievedCorpus.length > 0 && retrievedNotes.length > 0
+                ? "From Your Knowledge Sources"
+                : retrievedCorpus.length > 0
+                  ? "From Your Knowledgebases"
+                  : "From Your Notes";
 
             const ragSections = ragPayload.map((section) => ({
               ...section,
               topic: section.topic || ragTopic,
+              answerSource: answerSource,
+              showExpandButton: true,
             }));
 
             sections.push(...ragSections);
             setMessages([...newMessages, { role: "ai", content: [...sections] }]);
+
+            // Save and return - don't query external LLM when we have context
+            await saveChat([...newMessages, { role: "ai", content: [...sections] }], selectedChatId);
+            return;
           } catch (ragError) {
             console.error("Error generating RAG response:", ragError);
-            // Continue to general LLM response
+            // Continue to general LLM response as fallback
           }
         }
 
-        // Then, get general LLM response
-        const response = await api.post("/chat", { 
-          messages: newMessages, 
+        // Only get general LLM response if:
+        // 1. No context was found from notes/corpus OR
+        // 2. User explicitly requested external knowledge
+        const response = await api.post("/chat", {
+          messages: forceExternalKnowledge 
+            ? [{ role: "human", content: prompt }] 
+            : newMessages,
           schema: [simpleChat, codeChat],
         });
         const aiPayload = (Array.isArray(response.data) ? response.data.flat() : [response.data]) as AiSection[];
+
+        // Mark as external knowledge if user forced it
+        const llmSections = aiPayload.map((section) => ({
+          ...section,
+          topic: forceExternalKnowledge ? "From AI Knowledge" : section.topic,
+          answerSource: "external" as const,
+        }));
+
+        let updatedMessages: ChatMessage[];
         
-        // Combine all sections: notes + corpus + RAG response + general LLM response
-        const combinedPayload = [...sections, ...aiPayload];
-        const updatedMessages: ChatMessage[] = [...newMessages, { role: "ai", content: combinedPayload }];
+        if (forceExternalKnowledge) {
+          // Append external knowledge to the last AI message
+          const lastMessageIndex = messages.length - 1;
+          const lastMessage = messages[lastMessageIndex];
+          
+          if (lastMessage && lastMessage.role === "ai" && Array.isArray(lastMessage.content)) {
+            // Remove showExpandButton from existing sections and add new external sections
+            const updatedContent = [
+              ...lastMessage.content.map(section => ({ ...section, showExpandButton: false })),
+              ...llmSections
+            ];
+            updatedMessages = [
+              ...messages.slice(0, lastMessageIndex),
+              { role: "ai" as const, content: updatedContent }
+            ];
+          } else {
+            // Fallback: just add the external sections as a new AI message
+            updatedMessages = [...messages, { role: "ai" as const, content: llmSections }];
+          }
+        } else {
+          // Normal flow: combine all sections
+          const combinedPayload = [...sections, ...llmSections];
+          updatedMessages = [...newMessages, { role: "ai", content: combinedPayload }];
+        }
+        
         setMessages(updatedMessages);
         await saveChat(updatedMessages, selectedChatId);
       } catch (error) {
@@ -241,7 +310,7 @@ Please synthesize the information from these sources to directly answer the user
         setIsReplying(false);
       }
     },
-    [messages, selectedChatId, saveChat, user],
+    [messages, selectedChatId, saveChat, user]
   );
 
   // ---------------------------------------------------------------------------
@@ -504,23 +573,50 @@ Provide a concise 2-3 sentence summary of the relevant information only.`;
         setIsReplying(false);
       }
     },
-    [messages, saveChat, selectedChatId],
+    [messages, saveChat, selectedChatId]
   );
 
+  // ---------------------------------------------------------------------------
+  // Submit prompt handler - routes to appropriate handler based on mode
+  // ---------------------------------------------------------------------------
   const submitPrompt = useCallback(
-    async (rawPrompt: string) => {
+    async (rawPrompt: string, forceExternalKnowledge = false) => {
       if (isProcessingUrl) return;
 
       const trimmedInput = rawPrompt.trim();
       if (!trimmedInput) return;
 
+      setLastQuery(trimmedInput);
+
       if (isWebSearchMode) {
         await handleWebSearch(trimmedInput);
       } else {
-        await handleSendMessage(trimmedInput);
+        await handleSendMessage(trimmedInput, forceExternalKnowledge);
       }
     },
-    [handleSendMessage, handleWebSearch, isProcessingUrl, isWebSearchMode],
+    [handleSendMessage, handleWebSearch, isProcessingUrl, isWebSearchMode]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Expand to external knowledge - called when user clicks the expand button
+  // ---------------------------------------------------------------------------
+  const expandToExternalKnowledge = useCallback(
+    async (query?: string | React.MouseEvent) => {
+      // Ignore if query is an event object (from button click)
+      const providedQuery = typeof query === "string" ? query : undefined;
+      
+      // Find the last human message in the conversation
+      const lastHumanMessage = [...messages].reverse().find(m => m.role === "human");
+      const queryToUse = providedQuery || lastQuery || (typeof lastHumanMessage?.content === "string" ? lastHumanMessage.content : "");
+      
+      if (!queryToUse) {
+        console.error("No query found for external knowledge expansion");
+        return;
+      }
+      
+      await handleSendMessage(queryToUse, true);
+    },
+    [handleSendMessage, lastQuery, messages]
   );
 
   useEffect(() => {
@@ -546,5 +642,7 @@ Provide a concise 2-3 sentence summary of the relevant information only.`;
     selectChat,
     deleteChat,
     setIsWebSearchMode,
+    expandToExternalKnowledge,
+    lastQuery,
   };
 }

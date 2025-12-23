@@ -9,6 +9,7 @@ import OtherWebResults from "./OtherWebResults";
 import ArticlesAnswer from "./ArticlesAnswer";
 import NotesAnswer from "./NotesAnswer";
 import CorpusAnswer from "./CorpusAnswer";
+import ExpandKnowledgeButton from "./ExpandKnowledgeButton";
 import type { AiSection, Source } from "../../../types/chat";
 
 interface AIMessageSectionProps {
@@ -16,9 +17,11 @@ interface AIMessageSectionProps {
   onOpenSource: (source: Source) => void;
   onOpenNote?: (noteId: number) => void;
   onOpenCorpus?: (corpusId: number) => void;
+  onExpandKnowledge?: () => void;
+  isReplying?: boolean;
 }
 
-export default function AIMessageSection({ section, onOpenSource, onOpenNote, onOpenCorpus }: AIMessageSectionProps) {
+export default function AIMessageSection({ section, onOpenSource, onOpenNote, onOpenCorpus, onExpandKnowledge, isReplying }: AIMessageSectionProps) {
   const imageGallery = Array.isArray(section?.images) ? section.images.filter(Boolean) : [];
 
   if (section?.type === "notes") {
@@ -69,6 +72,13 @@ export default function AIMessageSection({ section, onOpenSource, onOpenNote, on
       <SourcesGrid sources={section?.sources} onOpenSource={onOpenSource} />
       {section?.date ? <p className="text-caption"> {section?.date} </p> : null}
       <ImageGallery images={imageGallery} />
+      {section?.showExpandButton && onExpandKnowledge && (
+        <ExpandKnowledgeButton
+          answerSource={section.answerSource || null}
+          onExpand={onExpandKnowledge}
+          disabled={isReplying}
+        />
+      )}
     </div>
   );
 }
